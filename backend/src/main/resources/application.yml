@@ -1,0 +1,51 @@
+server:
+  port: 8080
+  address: 127.0.0.1
+
+spring:
+  application:
+    name: veil-backend
+  datasource:
+    url: jdbc:sqlite:veil.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 25MB
+      max-request-size: 30MB
+  mvc:
+    format:
+      date: iso
+
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/swagger-ui.html
+    operationsSorter: method
+
+veil:
+  crypto:
+    pbkdf2-iterations: 100000
+    salt-length-bytes: 16
+    nonce-length-bytes: 12
+    key-length-bits: 256
+    tag-length-bits: 128
+  steganography:
+    max-image-width: 8192
+    max-image-height: 8192
+    max-payload-size-bytes: 10485760 # 10MB
+    magic-bytes: "VEIL"
+    envelope-version: 1
+    plaintext-version: 1
+  cors:
+    allowed-origins:
+      - "http://localhost:5173"
+      - "http://127.0.0.1:5173"
+      - "http://localhost:3000"
+      - "http://127.0.0.1:3000"
