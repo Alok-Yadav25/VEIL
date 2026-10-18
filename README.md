@@ -6,6 +6,13 @@
 
 An obsidian-grade, privacy-first digital image steganography platform and cryptographic telemetry studio. Conceal authenticated, AES-256-GCM encrypted payloads inside losslessly encoded carrier images with zero cloud egress, plausible deniability, error correction, and multi-carrier secret distribution.
 
+<br />
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-veil--20l2.onrender.com-8B5CF6?style=for-the-badge&logo=render&logoColor=white)](https://veil-20l2.onrender.com)
+[![GitHub Profile](https://img.shields.io/badge/Built%20by-Alok%20Yadav-09090B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Alok-Yadav25)
+
+<br />
+
 [![Backend Tests](https://img.shields.io/badge/Backend%20Tests-62%2F62%20Passing-brightgreen?style=flat-square&logo=java)](backend)
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-17%2F17%20Passing-brightgreen?style=flat-square&logo=react)](frontend)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20(0%20Errors)-blue?style=flat-square&logo=typescript)](frontend)
@@ -17,6 +24,11 @@ An obsidian-grade, privacy-first digital image steganography platform and crypto
 
 <br />
 
+🌐 **Live Application:** [**https://veil-20l2.onrender.com**](https://veil-20l2.onrender.com)  
+👤 **Author:** [**Alok Yadav (@Alok-Yadav25)**](https://github.com/Alok-Yadav25)
+
+<br />
+
 <img src="docs/images/hero-dark.png" alt="VEIL Editorial Hero Dark Theme" width="100%" style="border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);" />
 
 </div>
@@ -25,26 +37,40 @@ An obsidian-grade, privacy-first digital image steganography platform and crypto
 
 ## Table of Contents
 
+- [Live Deployment](#live-deployment)
 - [Overview & Philosophy](#overview--philosophy)
 - [Visual Interface Showcase](#visual-interface-showcase)
 - [Key Architectural Pillars](#key-architectural-pillars)
-  - [1. Authenticated Zero-Knowledge Cryptography](#1-authenticated-zero-knowledge-cryptography)
+  - [1. Authenticated Cryptography & Framing](#1-authenticated-cryptography--framing)
   - [2. Dual-Domain Steganography (Spatial LSB & 2D-DCT)](#2-dual-domain-steganography-spatial-lsb--2d-dct)
-  - [3. Reed-Solomon Forward Error Correction (FEC)](#3-reed-solomon-forward-error-correction-fec)
+  - [3. Pure-Java Reed-Solomon Error Correction (FEC)](#3-pure-java-reed-solomon-error-correction-fec)
   - [4. Dual-Payload Plausible Deniability](#4-dual-payload-plausible-deniability)
   - [5. Multi-Carrier Secret Sharding (Shamir K-of-N)](#5-multi-carrier-secret-sharding-shamir-k-of-n)
-  - [6. Ed25519 Cryptographic Image Provenance](#6-ed25519-cryptographic-image-provenance)
+  - [6. Pixel-Exact Ed25519 Provenance Attribution](#6-pixel-exact-ed25519-provenance-attribution)
   - [7. Air-Gapped Client-Side Processing](#7-air-gapped-client-side-processing)
 - [System Architecture](#system-architecture)
-- [Interface Design System](#interface-design-system)
+- [Design System & Interface Tokens](#design-system--interface-tokens)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Local Development Setup](#local-development-setup)
-  - [Running Test Suites](#running-test-suites)
-- [Free Cloud Deployment](#free-cloud-deployment)
+  - [Running Automated Test Suites](#running-automated-test-suites)
+- [Cloud Deployment on Render](#cloud-deployment-on-render)
 - [Cryptographic Disclosures & Threat Model](#cryptographic-disclosures--threat-model)
 - [Monorepo Directory Layout](#monorepo-directory-layout)
+- [Author & Credits](#author--credits)
 - [License](#license)
+
+---
+
+## Live Deployment
+
+VEIL is deployed and accessible worldwide as a unified production container on Render:
+
+🔗 **Production Web Application:** [**https://veil-20l2.onrender.com**](https://veil-20l2.onrender.com)
+
+- **Architecture:** Multi-stage production container packaging the React 18 TypeScript SPA inside a lightweight Eclipse Temurin 21 Alpine JRE.
+- **Data Protection:** Zero remote analytics, zero third-party trackers, zero cloud payload uploads. Plaintext payloads and encryption passphrases never touch persistent disk.
+- **Client Fallback:** If internet connectivity is severed, VEIL's WebCrypto engine executes entirely client-side inside the browser.
 
 ---
 
@@ -55,10 +81,10 @@ An obsidian-grade, privacy-first digital image steganography platform and crypto
 VEIL conceals authenticated, encrypted data directly within the pixel raster of digital images. To visual inspection, automated screen capture, and non-forensic pipelines, a VEIL stego image is indistinguishable from its pristine master ($\text{PSNR} > 75\text{ dB}$).
 
 ### Core Design Principles
-- **No Fabricated Claims:** Zero marketing buzzwords or claims of "unbreakable" compression survival. Physical limits are explicitly disclosed.
-- **Zero Server Retention:** Plaintext payloads and encryption passphrases never touch disk. Memory buffers are zeroized upon completion.
+- **No Fabricated Claims:** Zero marketing buzzwords or false claims of "unbreakable" lossy compression survival. Physical and mathematical limits are explicitly disclosed.
+- **Zero Server Retention:** Plaintext payloads and passphrases are processed in volatile memory only and zeroized immediately upon completion.
 - **Auditable Cryptographic Standards:** Built strictly upon NIST SP 800-38D (AES-GCM), RFC 9106 (Argon2id), RFC 8032 (Ed25519), and Reed-Solomon $GF(2^8)$ coding.
-- **Linear/Raycast Precision:** High-contrast typography, 1px structural hairline borders, tactile spring-loaded controls, and zero hydration layout shifts.
+- **Obsidian Aesthetic:** Linear and Raycast-inspired interface with tactile spring physics, high-contrast typography, and seamless light/dark modes.
 
 ---
 
@@ -66,31 +92,31 @@ VEIL conceals authenticated, encrypted data directly within the pixel raster of 
 
 <div align="center">
 
-### The Steganography Studio (6-Stage Progressive Pipeline)
-*Fanned carrier gallery, reticle upload dropzone, real-time bit capacity ring, and Argon2id parameter telemetry.*
+### High-Contrast Light Theme (`#FAFAF9`)
+*Tactile sliding knob, pure white card surfaces, slate hairline dividers, and persistent bottom telemetry footer.*
 
-<img src="docs/images/studio-workspace.png" alt="VEIL Studio Workspace Dark Theme" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+<img src="docs/images/hero-light.png" alt="VEIL Hero Light Theme" width="94%" style="border-radius: 10px; margin-bottom: 24px;" />
 
 <br />
 
-### High Contrast Light Theme (`#FAFAF9`)
-*Refined off-white surface, pure white cards, and slate hairline borders powered by a spring-animated sliding knob.*
+### The Steganography Studio (6-Stage Progressive Pipeline)
+*Fanned carrier gallery, reticle upload dropzone, real-time bit capacity ring, and Argon2id parameter telemetry.*
 
-<img src="docs/images/hero-light.png" alt="VEIL Hero Light Theme" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+<img src="docs/images/studio-workspace.png" alt="VEIL Studio Workspace Dark Theme" width="94%" style="border-radius: 10px; margin-bottom: 24px;" />
 
 <br />
 
 ### Sub-Pixel Inspection & Difference Heatmap Instrument
 *Synchronized split-curtain slider, 10× difference mask amplification, PSNR ($80.89\text{ dB}$), and MSE ($0.000530$).*
 
-<img src="docs/images/pixel-inspection.png" alt="VEIL Pixel Inspection Compare" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+<img src="docs/images/pixel-inspection.png" alt="VEIL Pixel Inspection Compare" width="94%" style="border-radius: 10px; margin-bottom: 24px;" />
 
 <br />
 
 ### Technical FAQ Accordion & Truthful Disclosures
 *Accessible expanding accordion (`Faq4` style) with real-time search and rigorous physical and cryptographic answers.*
 
-<img src="docs/images/technical-faq.png" alt="VEIL Technical FAQ Accordion" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+<img src="docs/images/technical-faq.png" alt="VEIL Technical FAQ Accordion" width="94%" style="border-radius: 10px; margin-bottom: 24px;" />
 
 <br />
 
@@ -105,7 +131,7 @@ VEIL conceals authenticated, encrypted data directly within the pixel raster of 
 
 ## Key Architectural Pillars
 
-### 1. Authenticated Zero-Knowledge Cryptography
+### 1. Authenticated Cryptography & Framing
 - **Memory-Hard Key Derivation:** Employs **Argon2id** (RFC 9106) with a 16-byte cryptographically secure random salt, requiring 19 MiB working memory, 2 iterations, and 1 lane to neutralize parallelized ASIC/GPU brute-force attacks.
 - **Authenticated Encryption with Associated Data (AEAD):** Plaintext is encrypted with **AES-256-GCM** using unique 96-bit initialization vectors. The resulting 128-bit authentication tag guarantees that modifying even a single carrier bit triggers an immediate authentication rejection during extraction.
 - **Big-Endian Binary Framing:** Payloads use strict binary length prefixing (`magic [4B]`, `version [2B]`, `flags [2B]`, `length [4B]`, `salt [16B]`, `iv [12B]`), preventing premature stream truncation from interior null bytes (`0x00`).
@@ -114,7 +140,7 @@ VEIL conceals authenticated, encrypted data directly within the pixel raster of 
 - **Keyed Feistel PRNG Scatter (Spatial):** Replaces naive sequential pixel writing with a pseudo-random permutation generator derived from the encryption key. Payload bits are scattered pseudo-randomly across non-contiguous pixels, preventing spatial boundary clustering detectable by Chi-Square ($\chi^2$) analysis.
 - **2D-DCT Frequency-Domain Modulation:** For lossy-resistant embedding, VEIL transforms $8\times 8$ luminance ($Y$) blocks into frequency coefficients via 2D Discrete Cosine Transform, modulating mid-frequency AC coefficients ($AC_{3,1}$ and $AC_{4,0}$) to survive moderate post-processing.
 
-### 3. Reed-Solomon Forward Error Correction (FEC)
+### 3. Pure-Java Reed-Solomon Error Correction (FEC)
 - **In-House Pure-Java Codec:** Implemented over Galois Field $GF(2^8)$ with irreducible generator polynomial $p(x) = x^8 + x^4 + x^3 + x^2 + 1$ ($0x11D$).
 - **Parity Error Recovery:** Generates systematic parity symbols across chunked payload blocks. Automatically detects and corrects up to $T = \lfloor(N - K) / 2\rfloor$ corrupted bytes caused by image noise, channel degradation, or minor spatial modifications.
 
@@ -126,13 +152,13 @@ VEIL conceals authenticated, encrypted data directly within the pixel raster of 
 - **Threshold Polynomial Secret Distribution:** Breaks sensitive secrets into $N$ polynomial shares over $GF(2^8)$ and embeds each share in an independent carrier image.
 - **Information-Theoretic Security:** Any $K$ carrier images can fully reconstruct the original secret. An adversary possessing $K - 1$ images gains strictly zero mathematical information about the payload.
 
-### 6. Ed25519 Cryptographic Image Provenance
-- **Pixel-Exact Authorship Attribution:** Generates RFC 8032 Ed25519 public/private keypairs to sign the SHA-256 raster hash of carrier images.
-- **Tamper Verification:** Allows recipients to verify author identity and detect single-bit pixel tampering through an embedded digital provenance manifest.
+### 6. Pixel-Exact Ed25519 Provenance Attribution
+- **Authorship Verification:** Generates RFC 8032 Ed25519 public/private keypairs to sign the SHA-256 raster hash of carrier images.
+- **Tamper Detection:** Allows recipients to verify author identity and detect single-bit pixel tampering through an embedded digital provenance manifest.
 
 ### 7. Air-Gapped Client-Side Processing
 - **100% In-Browser Engine:** Provides client-side fallback via the W3C Web Cryptography API (`SubtleCrypto` AES-GCM and PBKDF2) and HTML5 Canvas pixel manipulation.
-- **No Backend Required:** Sensitive operations can execute completely air-gapped with network access severed.
+- **Severed Network Operation:** Sensitive operations can execute completely offline with network access disabled.
 
 ---
 
@@ -146,11 +172,13 @@ flowchart TD
         UI["Obsidian Studio UI & Editorial Components"]
         Theme["ThemeProvider (Dark Midnight / High Contrast Light)"]
         OfflineEngine["Offline Stego Engine (WebCrypto + Canvas LSB)"]
+        Footer["Universal Fixed Footer (Built by Alok Yadav)"]
         UI --> Theme
         UI --> OfflineEngine
+        UI --> Footer
     end
     
-    Client -->|HTTP REST Multipart / JSON| Backend["Spring Boot 3.3.4 Application (Port 8080)"]
+    Client -->|HTTP REST Multipart / JSON| Backend["Spring Boot 3.3.4 Application (Port 10000)"]
     
     subgraph Backend Pipeline
         Controller["REST Controllers (/api/v1/*)"]
@@ -175,7 +203,7 @@ flowchart TD
 
 ---
 
-## Interface Design System
+## Design System & Interface Tokens
 
 | Token | Dark Midnight | High Contrast Light | Semantic Purpose |
 | :--- | :--- | :--- | :--- |
@@ -213,7 +241,7 @@ chmod +x scripts/*.sh
    cd backend
    ./mvnw spring-boot:run
    ```
-   *Backend binds to `http://127.0.0.1:8080`.*
+   *Backend binds to `http://127.0.0.1:8080` (or `http://127.0.0.1:10000`).*
    - Swagger UI: `http://127.0.0.1:8080/api/v1/swagger-ui.html`
    - Health Endpoint: `http://127.0.0.1:8080/api/v1/health`
 
@@ -227,7 +255,7 @@ chmod +x scripts/*.sh
 
 ---
 
-### Running Test Suites
+### Running Automated Test Suites
 
 #### Backend Unit & Integration Tests (JUnit 5)
 Executes all 62 cryptographic, Reed-Solomon, 2D-DCT, Shamir, and concurrency tests:
@@ -261,21 +289,26 @@ npm run build
 
 ---
 
-## Free Cloud Deployment
+## Cloud Deployment on Render
 
-VEIL includes a multi-stage production [`Dockerfile`](file:///Users/alokyadav/Desktop/image_detail/Dockerfile) that builds the React frontend and packages it into Spring Boot's static resources, allowing **both the frontend and backend to run inside a single free cloud container**.
+VEIL is pre-configured with a multi-stage production [`Dockerfile`](file:///Users/alokyadav/Desktop/image_detail/Dockerfile) and [`render.yaml`](file:///Users/alokyadav/Desktop/image_detail/render.yaml) blueprint.
 
-### 1-Click Deployment via Render.com
-1. Push your repository to GitHub.
-2. Log in to [Render.com](https://render.com) and click **New +** $\to$ **Blueprint**.
-3. Select your repository. Render reads the included [`render.yaml`](file:///Users/alokyadav/Desktop/image_detail/render.yaml) and deploys automatically on the free tier.
+### Live Production Deployment
+- **URL:** [https://veil-20l2.onrender.com](https://veil-20l2.onrender.com)
+- **Host:** Render Web Service (Free Tier)
+- **Runtime:** Multi-Stage Docker (Eclipse Temurin JRE 21 + Alpine Linux)
+- **Memory Optimization:** Tuned with `-Xms128m -Xmx350m -XX:+TieredCompilation -XX:TieredStopAtLevel=1` for fast cold starts without out-of-memory faults.
 
-### 16GB RAM Free Deployment via Hugging Face Spaces
-1. Create a free account at [huggingface.co](https://huggingface.co) and click **Create new Space**.
-2. Select **Docker** $\to$ **Blank** with the free **2 vCPU · 16 GB RAM** hardware tier.
-3. Push your repository to the space Git remote. Hugging Face runs the multi-stage Dockerfile with **zero sleep / spin-down**.
+### Deploying Your Own Instance
+1. Fork or push this repository to GitHub.
+2. Sign in to [Render.com](https://render.com) and click **New +** $\to$ **Web Service**.
+3. Select your repository and choose **Docker** runtime on the **Free** plan.
+4. Add environment variables:
+   - `SERVER_ADDRESS` = `0.0.0.0`
+   - `SQLITE_DB_PATH` = `/app/data/veil.db`
+5. Click **Create Web Service**. Render builds the image and deploys within 2–3 minutes.
 
-*See the full [Free Deployment Guide](docs/architecture/free_deployment_guide.md) for Koyeb, Fly.io, and Vercel setup.*
+*See the full [Free Deployment Guide](docs/architecture/free_deployment_guide.md) for Koyeb, Hugging Face Spaces, and Fly.io configurations.*
 
 ---
 
@@ -316,7 +349,7 @@ veil/
 │   │   ├── components/
 │   │   │   ├── brand/                    # VEIL vector logos and brand symbols
 │   │   │   ├── landing/                  # Editorial HeroSection & FaqSection accordion
-│   │   │   ├── layout/                   # AppShell, Linear navigation, BottomStatusBar
+│   │   │   ├── layout/                   # AppShell, Linear navigation, BottomStatusBar (Author link)
 │   │   │   ├── navigation/               # CommandPalette (⌘K), Sidebar
 │   │   │   ├── studio/                   # 6-stage progressive choreography components
 │   │   │   └── ui/                       # Spring ThemeSwitcher knob, BentoCard, PillBadge
@@ -334,6 +367,17 @@ veil/
 ├── render.yaml                           # 1-Click Render.com deployment blueprint
 └── LICENSE                               # Apache 2.0 Open Source License
 ```
+
+---
+
+## Author & Credits
+
+Designed, architected, and built by:
+
+**Alok Yadav**
+- 🐙 **GitHub:** [@Alok-Yadav25](https://github.com/Alok-Yadav25)
+- 🚀 **Live Project:** [https://veil-20l2.onrender.com](https://veil-20l2.onrender.com)
+- 📦 **Repository:** [https://github.com/Alok-Yadav25/VEIL](https://github.com/Alok-Yadav25/VEIL)
 
 ---
 
