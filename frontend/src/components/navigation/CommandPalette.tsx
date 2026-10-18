@@ -11,6 +11,9 @@ import {
   Settings,
   ArrowRight,
   Sparkles,
+  Share2,
+  Layers,
+  Award,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -57,6 +60,27 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       description: 'Side-by-side comparison, PSNR, MSE, and difference heatmap',
       category: 'Workspace',
       icon: <SlidersHorizontal className="w-4 h-4 text-cyan-400" />,
+    },
+    {
+      id: 'sharding',
+      title: 'Multi-Carrier Secret Sharding',
+      description: 'Distribute secrets across N carriers with Shamir (K, N) threshold recovery',
+      category: 'Workspace',
+      icon: <Share2 className="w-4 h-4 text-violet-400" />,
+    },
+    {
+      id: 'bitplane',
+      title: 'Bit-Plane Slicer & Steganalysis',
+      description: 'Slice image raster into 8 binary bit planes to visually inspect LSB noise and scattering',
+      category: 'Image Intelligence',
+      icon: <Layers className="w-4 h-4 text-cyan-400" />,
+    },
+    {
+      id: 'provenance',
+      title: 'Image Provenance & Authenticity',
+      description: 'Sign and verify raster integrity and attribution with Ed25519 digital signatures',
+      category: 'Image Intelligence',
+      icon: <Award className="w-4 h-4 text-emerald-400" />,
     },
     {
       id: 'analyzer',

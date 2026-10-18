@@ -1,66 +1,192 @@
-# VEIL — Secure Digital Steganography Platform
+<div align="center">
 
-> **Hide the message. Protect its meaning.**
-> An offline-first steganography workspace for embedding encrypted data in images, recovering protected payloads, and understanding the security of every operation.
+# VEIL
 
----
+### Privacy, embedded in pixels.
 
-## Highlights & Features
+An obsidian-grade, privacy-first digital image steganography platform and cryptographic telemetry studio. Conceal authenticated, AES-256-GCM encrypted payloads inside losslessly encoded carrier images with zero cloud egress, plausible deniability, error correction, and multi-carrier secret distribution.
 
-- **Authenticated Encryption**: Uses standard **AES-256-GCM** to guarantee both payload confidentiality and tamper detection via 128-bit authentication tags.
-- **Hardened Key Derivation**: **PBKDF2-HMAC-SHA-256** with 100,000 iterations to resist dictionary and brute-force attacks.
-- **Pure Java Steganography**: Sequential Red, Green, and Blue channel LSB modulation (preserving Alpha to eliminate transparency glitches).
-- **Text & Binary File Payloads**: Supports Unicode text (Hindi, Chinese, Emoji) and arbitrary binary files (PDF, ZIP, DOCX) with path-traversal sanitization.
-- **Preflight Capacity Verification**: Real-time server-side capacity checks with visual `CapacityRing` and preflight report before embedding.
-- **Automated Recoverability Verification**: Automatically reopens and decodes exported PNG images in-memory to confirm payload recoverability before offering the download.
-- **Interactive Image Comparison**: Draggable before-and-after image slider, amplified difference heatmap, and real-time PSNR and MSE metric calculation.
-- **Interactive Steganography Explorer**: Educational bit-plane workbench demonstrating LSB modulation and explaining framing requirements.
-- **Local SQLite History**: Persists audit metadata without ever storing passwords, encryption keys, or secret messages.
-- **Global Command Palette**: Quick keyboard navigation via <kbd>Cmd</kbd>/<kbd>Ctrl</kbd> + <kbd>K</kbd>.
+[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-62%2F62%20Passing-brightgreen?style=flat-square&logo=java)](backend)
+[![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-17%2F17%20Passing-brightgreen?style=flat-square&logo=react)](frontend)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20(0%20Errors)-blue?style=flat-square&logo=typescript)](frontend)
+[![Java](https://img.shields.io/badge/Java-21%20LTS-orange?style=flat-square&logo=openjdk)](backend)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen?style=flat-square&logo=springboot)](backend)
+[![Vite](https://img.shields.io/badge/Vite-5.4-purple?style=flat-square&logo=vite)](frontend)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](frontend)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](LICENSE)
 
----
+<br />
 
-## Technology Stack
+<img src="docs/images/hero-dark.png" alt="VEIL Editorial Hero Dark Theme" width="100%" style="border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);" />
 
-| Layer | Technology | Version | Purpose |
-|---|---|---|---|
-| **Frontend** | React | 18.3.1 | Component-driven web interface |
-| **Language** | TypeScript | 5.6.3 | Type-safe frontend architecture |
-| **Build Tool** | Vite | 5.4.8 | Fast dev server and optimized production bundling |
-| **Styling** | Tailwind CSS | 3.4.13 | Midnight navy / Dark slate design system |
-| **Animations** | Framer Motion | 11.11.11 | Smooth page transitions and microinteractions |
-| **Icons** | Lucide React | 0.453.0 | Cohesive icon system |
-| **Backend** | Java | 21 / 22 | Core cryptographic and steganographic engine |
-| **Framework** | Spring Boot | 3.3.4 | REST API and modular application services |
-| **API Docs** | Springdoc OpenAPI | 2.6.0 | Swagger UI and OpenAPI 3.0 documentation |
-| **Cryptography** | JCA (Java Cryptography) | Native | AES-256-GCM & PBKDF2-HMAC-SHA-256 |
-| **Database** | SQLite 3 | 3.46.1.0 | Local operation history |
-| **Data Access** | Spring JDBC & HikariCP | 3.3.4 | Parameterized SQL prepared statements |
-| **Testing** | JUnit 5 & Vitest | Latest | Automated backend, frontend, and integration tests |
+</div>
 
 ---
 
-## Architecture Diagram
+## Table of Contents
+
+- [Overview & Philosophy](#overview--philosophy)
+- [Visual Interface Showcase](#visual-interface-showcase)
+- [Key Architectural Pillars](#key-architectural-pillars)
+  - [1. Authenticated Zero-Knowledge Cryptography](#1-authenticated-zero-knowledge-cryptography)
+  - [2. Dual-Domain Steganography (Spatial LSB & 2D-DCT)](#2-dual-domain-steganography-spatial-lsb--2d-dct)
+  - [3. Reed-Solomon Forward Error Correction (FEC)](#3-reed-solomon-forward-error-correction-fec)
+  - [4. Dual-Payload Plausible Deniability](#4-dual-payload-plausible-deniability)
+  - [5. Multi-Carrier Secret Sharding (Shamir K-of-N)](#5-multi-carrier-secret-sharding-shamir-k-of-n)
+  - [6. Ed25519 Cryptographic Image Provenance](#6-ed25519-cryptographic-image-provenance)
+  - [7. Air-Gapped Client-Side Processing](#7-air-gapped-client-side-processing)
+- [System Architecture](#system-architecture)
+- [Interface Design System](#interface-design-system)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Local Development Setup](#local-development-setup)
+  - [Running Test Suites](#running-test-suites)
+- [Free Cloud Deployment](#free-cloud-deployment)
+- [Cryptographic Disclosures & Threat Model](#cryptographic-disclosures--threat-model)
+- [Monorepo Directory Layout](#monorepo-directory-layout)
+- [License](#license)
+
+---
+
+## Overview & Philosophy
+
+**VEIL** was designed to solve a fundamental problem in privacy-focused communication: **encryption protects the confidentiality of a message, but does not hide the fact that communication is occurring.** In hostile network environments, transmitting ciphertext invites scrutiny, interception, or coercion.
+
+VEIL conceals authenticated, encrypted data directly within the pixel raster of digital images. To visual inspection, automated screen capture, and non-forensic pipelines, a VEIL stego image is indistinguishable from its pristine master ($\text{PSNR} > 75\text{ dB}$).
+
+### Core Design Principles
+- **No Fabricated Claims:** Zero marketing buzzwords or claims of "unbreakable" compression survival. Physical limits are explicitly disclosed.
+- **Zero Server Retention:** Plaintext payloads and encryption passphrases never touch disk. Memory buffers are zeroized upon completion.
+- **Auditable Cryptographic Standards:** Built strictly upon NIST SP 800-38D (AES-GCM), RFC 9106 (Argon2id), RFC 8032 (Ed25519), and Reed-Solomon $GF(2^8)$ coding.
+- **Linear/Raycast Precision:** High-contrast typography, 1px structural hairline borders, tactile spring-loaded controls, and zero hydration layout shifts.
+
+---
+
+## Visual Interface Showcase
+
+<div align="center">
+
+### The Steganography Studio (6-Stage Progressive Pipeline)
+*Fanned carrier gallery, reticle upload dropzone, real-time bit capacity ring, and Argon2id parameter telemetry.*
+
+<img src="docs/images/studio-workspace.png" alt="VEIL Studio Workspace Dark Theme" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+
+<br />
+
+### High Contrast Light Theme (`#FAFAF9`)
+*Refined off-white surface, pure white cards, and slate hairline borders powered by a spring-animated sliding knob.*
+
+<img src="docs/images/hero-light.png" alt="VEIL Hero Light Theme" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+
+<br />
+
+### Sub-Pixel Inspection & Difference Heatmap Instrument
+*Synchronized split-curtain slider, 10× difference mask amplification, PSNR ($80.89\text{ dB}$), and MSE ($0.000530$).*
+
+<img src="docs/images/pixel-inspection.png" alt="VEIL Pixel Inspection Compare" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+
+<br />
+
+### Technical FAQ Accordion & Truthful Disclosures
+*Accessible expanding accordion (`Faq4` style) with real-time search and rigorous physical and cryptographic answers.*
+
+<img src="docs/images/technical-faq.png" alt="VEIL Technical FAQ Accordion" width="92%" style="border-radius: 10px; margin-bottom: 24px;" />
+
+<br />
+
+### Mobile Viewport Ergonomics (390 × 844)
+*Strict viewport boundaries, stacked action triggers, slide-over navigation drawer, and compact sliding theme toggle.*
+
+<img src="docs/images/mobile-view.png" alt="VEIL Mobile Viewport" width="40%" style="border-radius: 10px; margin-bottom: 24px;" />
+
+</div>
+
+---
+
+## Key Architectural Pillars
+
+### 1. Authenticated Zero-Knowledge Cryptography
+- **Memory-Hard Key Derivation:** Employs **Argon2id** (RFC 9106) with a 16-byte cryptographically secure random salt, requiring 19 MiB working memory, 2 iterations, and 1 lane to neutralize parallelized ASIC/GPU brute-force attacks.
+- **Authenticated Encryption with Associated Data (AEAD):** Plaintext is encrypted with **AES-256-GCM** using unique 96-bit initialization vectors. The resulting 128-bit authentication tag guarantees that modifying even a single carrier bit triggers an immediate authentication rejection during extraction.
+- **Big-Endian Binary Framing:** Payloads use strict binary length prefixing (`magic [4B]`, `version [2B]`, `flags [2B]`, `length [4B]`, `salt [16B]`, `iv [12B]`), preventing premature stream truncation from interior null bytes (`0x00`).
+
+### 2. Dual-Domain Steganography (Spatial LSB & 2D-DCT)
+- **Keyed Feistel PRNG Scatter (Spatial):** Replaces naive sequential pixel writing with a pseudo-random permutation generator derived from the encryption key. Payload bits are scattered pseudo-randomly across non-contiguous pixels, preventing spatial boundary clustering detectable by Chi-Square ($\chi^2$) analysis.
+- **2D-DCT Frequency-Domain Modulation:** For lossy-resistant embedding, VEIL transforms $8\times 8$ luminance ($Y$) blocks into frequency coefficients via 2D Discrete Cosine Transform, modulating mid-frequency AC coefficients ($AC_{3,1}$ and $AC_{4,0}$) to survive moderate post-processing.
+
+### 3. Reed-Solomon Forward Error Correction (FEC)
+- **In-House Pure-Java Codec:** Implemented over Galois Field $GF(2^8)$ with irreducible generator polynomial $p(x) = x^8 + x^4 + x^3 + x^2 + 1$ ($0x11D$).
+- **Parity Error Recovery:** Generates systematic parity symbols across chunked payload blocks. Automatically detects and corrects up to $T = \lfloor(N - K) / 2\rfloor$ corrupted bytes caused by image noise, channel degradation, or minor spatial modifications.
+
+### 4. Dual-Payload Plausible Deniability
+- **Coercion Resistance:** Solves the duress problem by interleaving two independent cryptographic payloads into orthogonal bit-planes of the same carrier image.
+- **Decoy vs. Secret:** Providing **Passphrase A** decrypts a benign decoy message. Providing **Passphrase B** decrypts the sensitive secret message. The hidden channel is indistinguishable from random LSB noise, mathematically denying proof of a second secret's existence.
+
+### 5. Multi-Carrier Secret Sharding (Shamir K-of-N)
+- **Threshold Polynomial Secret Distribution:** Breaks sensitive secrets into $N$ polynomial shares over $GF(2^8)$ and embeds each share in an independent carrier image.
+- **Information-Theoretic Security:** Any $K$ carrier images can fully reconstruct the original secret. An adversary possessing $K - 1$ images gains strictly zero mathematical information about the payload.
+
+### 6. Ed25519 Cryptographic Image Provenance
+- **Pixel-Exact Authorship Attribution:** Generates RFC 8032 Ed25519 public/private keypairs to sign the SHA-256 raster hash of carrier images.
+- **Tamper Verification:** Allows recipients to verify author identity and detect single-bit pixel tampering through an embedded digital provenance manifest.
+
+### 7. Air-Gapped Client-Side Processing
+- **100% In-Browser Engine:** Provides client-side fallback via the W3C Web Cryptography API (`SubtleCrypto` AES-GCM and PBKDF2) and HTML5 Canvas pixel manipulation.
+- **No Backend Required:** Sensitive operations can execute completely air-gapped with network access severed.
+
+---
+
+## System Architecture
 
 ```mermaid
 flowchart TD
-    User["React 18 + TypeScript Frontend (Port 5173)"]
-    API["Spring Boot 3.3.4 REST API (Port 8080)"]
+    Client["Client Browser (React 18 + TypeScript + Vite)"]
     
-    User -->|HTTP Multipart & JSON| API
-    
-    subgraph Spring Boot Backend Modules
-        API --> Controller["REST Controllers (/api/v1/*)"]
-        Controller --> Validator["Image & Payload Validators"]
-        Validator --> Capacity["Capacity & Preflight Service"]
-        Capacity --> Crypto["AES-256-GCM / PBKDF2 Engine"]
-        Crypto --> Stego["LSB Steganography Engine"]
-        Stego --> Verify["Round-Trip Recoverability Verifier"]
-        Verify --> History["Operation History Service"]
+    subgraph Frontend Architecture
+        UI["Obsidian Studio UI & Editorial Components"]
+        Theme["ThemeProvider (Dark Midnight / High Contrast Light)"]
+        OfflineEngine["Offline Stego Engine (WebCrypto + Canvas LSB)"]
+        UI --> Theme
+        UI --> OfflineEngine
     end
     
-    History -->|Prepared Statements| DB[("SQLite Local DB (veil.db)")]
+    Client -->|HTTP REST Multipart / JSON| Backend["Spring Boot 3.3.4 Application (Port 8080)"]
+    
+    subgraph Backend Pipeline
+        Controller["REST Controllers (/api/v1/*)"]
+        SpaCtrl["SpaWebController (Single-Container Routing)"]
+        Crypto["Argon2id KDF + AES-256-GCM AEAD Engine"]
+        FEC["Reed-Solomon GF(2⁸) Codec"]
+        StegoEngine["Steganography Engine (Keyed Feistel & 2D-DCT)"]
+        Sharding["Shamir (K, N) Secret Sharing Service"]
+        Provenance["Ed25519 Provenance Service"]
+        MemoryGuard["Large-Raster Heap Semaphore Guards"]
+        
+        Controller --> Crypto
+        Controller --> FEC
+        Controller --> StegoEngine
+        Controller --> Sharding
+        Controller --> Provenance
+        Controller --> MemoryGuard
+    end
+    
+    Backend -->|Prepared Statements| DB[("Local SQLite Database (veil.db)")]
 ```
+
+---
+
+## Interface Design System
+
+| Token | Dark Midnight | High Contrast Light | Semantic Purpose |
+| :--- | :--- | :--- | :--- |
+| **Canvas Background** | `#07080C` | `#FAFAF9` | Primary viewport canvas |
+| **Workspace Shell** | `#0B0D13` | `#F4F4F5` | Understated workspace backdrop |
+| **Card Surface** | `#11141D` | `#FFFFFF` | Bento cards with 1px border highlight |
+| **Structural Borders** | `rgba(255,255,255,0.08)` | `rgba(0,0,0,0.08)` | Hairline dividers and grid lines |
+| **Primary Accent** | `#A78BFA` (Electric Violet) | `#7C3AED` (Deep Violet) | Active pills, links, key metrics |
+| **Secondary Accent** | `#67E8F9` (Luminous Cyan) | `#0284C7` (Sky Blue) | Inspection reticles, capacity bars |
+| **Success Status** | `#34D399` | `#16A34A` | Verification badges, engine online |
+| **Primary CTA** | High-contrast `#F4F5F7` | Pitch `#09090B` | Inverted primary action buttons |
 
 ---
 
@@ -70,104 +196,153 @@ flowchart TD
 - **Java 21 LTS** or newer (`java -version`)
 - **Node.js v18+** (`node -v`)
 - **npm v9+** (`npm -v`)
+- Optional: **Docker** (`docker -v`)
 
-### Quick Start (Concurrent Development)
-From the repository root:
+### Local Development Setup
+
+#### Quick Start (Single Command)
+Run both the Spring Boot backend and Vite frontend concurrently:
 ```bash
 chmod +x scripts/*.sh
 ./scripts/dev.sh
 ```
 
-### Manual Execution
+#### Manual Execution
+1. **Start the Java Backend:**
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
+   *Backend binds to `http://127.0.0.1:8080`.*
+   - Swagger UI: `http://127.0.0.1:8080/api/v1/swagger-ui.html`
+   - Health Endpoint: `http://127.0.0.1:8080/api/v1/health`
 
-#### 1. Start Java Backend
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-Backend will start on `http://127.0.0.1:8080`.
-- Swagger UI: `http://127.0.0.1:8080/api/v1/swagger-ui.html`
-- Health check: `http://127.0.0.1:8080/api/v1/health`
-
-#### 2. Start React Frontend
-In a separate terminal:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Frontend will be available at `http://127.0.0.1:5173`.
+2. **Start the React Frontend:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   *Frontend opens at `http://127.0.0.1:5173`.*
 
 ---
 
-## Automated Test Suites
+### Running Test Suites
 
-### Backend Unit & Integration Tests (JUnit 5)
+#### Backend Unit & Integration Tests (JUnit 5)
+Executes all 62 cryptographic, Reed-Solomon, 2D-DCT, Shamir, and concurrency tests:
 ```bash
 cd backend
 ./mvnw test
 ```
-*Current status: 28 tests passing (0 failures, 0 errors, 0 skipped).*
+```text
+Results:
+Tests run: 62, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS (Total time: ~9s)
+```
 
-### Frontend Component Tests (Vitest)
+#### Frontend Component Tests (Vitest)
+Executes all 17 component, theme switcher, hero section, and FAQ tests:
 ```bash
 cd frontend
 npm test
 ```
-*Current status: 8 tests passing.*
+```text
+Test Files  3 passed (3)
+Tests       17 passed (17)
+```
 
-### Production Build
+#### TypeScript Typecheck & Production Build
 ```bash
-# Frontend production bundle
-cd frontend && npm run build
-
-# Backend production executable JAR
-cd ../backend && ./mvnw clean package -DskipTests
+cd frontend
+npx tsc --noEmit
+npm run build
 ```
 
 ---
 
-## Security Model & Threat Disclosures
+## Free Cloud Deployment
 
-| Guarantee | Description |
-|---|---|
-| **Confidentiality** | Payload is encrypted with AES-256-GCM prior to embedding. |
-| **Authentication** | 128-bit authentication tag detects any bit alterations or incorrect passwords. |
-| **Local Privacy** | Zero cloud telemetry. All operations run locally; passwords and secrets are never persisted to SQLite. |
-| **Limitation: Lossy Compression** | LSB steganography will not survive lossy compression (JPEG, WhatsApp, social media recompression). Always share stego files as lossless PNG documents. |
-| **Limitation: Statistical Steganalysis** | Spatial LSB embedding is visually invisible ($> 50$ dB PSNR), but can be detected by statistical steganalysis tools (Chi-Square). |
+VEIL includes a multi-stage production [`Dockerfile`](file:///Users/alokyadav/Desktop/image_detail/Dockerfile) that builds the React frontend and packages it into Spring Boot's static resources, allowing **both the frontend and backend to run inside a single free cloud container**.
+
+### 1-Click Deployment via Render.com
+1. Push your repository to GitHub.
+2. Log in to [Render.com](https://render.com) and click **New +** $\to$ **Blueprint**.
+3. Select your repository. Render reads the included [`render.yaml`](file:///Users/alokyadav/Desktop/image_detail/render.yaml) and deploys automatically on the free tier.
+
+### 16GB RAM Free Deployment via Hugging Face Spaces
+1. Create a free account at [huggingface.co](https://huggingface.co) and click **Create new Space**.
+2. Select **Docker** $\to$ **Blank** with the free **2 vCPU · 16 GB RAM** hardware tier.
+3. Push your repository to the space Git remote. Hugging Face runs the multi-stage Dockerfile with **zero sleep / spin-down**.
+
+*See the full [Free Deployment Guide](docs/architecture/free_deployment_guide.md) for Koyeb, Fly.io, and Vercel setup.*
 
 ---
 
-## Monorepo Layout
+## Cryptographic Disclosures & Threat Model
+
+| Property | What VEIL Guarantees | What It Does NOT Guarantee |
+| :--- | :--- | :--- |
+| **Payload Secrecy** | Encrypted with AES-256-GCM derived via Argon2id. Computationally infeasible to decrypt without passphrase. | Does not protect weak passwords against offline dictionary attacks if password entropy is poor. |
+| **Data Integrity** | 128-bit GCM authentication tag immediately detects any carrier pixel tampering or password mismatch. | Cannot recover lost passphrases. There are zero backdoors or master escrow keys. |
+| **Visual Invisibility** | Modulates LSB parity below human Just-Noticeable Difference (typical $\text{PSNR} > 75\text{ dB}$). | Does not survive lossy compression (JPEG, WhatsApp recompression). Spatial LSB requires lossless PNG/BMP. |
+| **Steganalysis Resistance** | Keyed Feistel PRNG scatter prevents sequential Chi-Square ($\chi^2$) analysis detection. | High payload ratios ($> 20\%$) remain statistically distinguishable by high-dimensional deep-learning classifiers. |
+| **Digital Provenance** | Ed25519 signature guarantees raster has not been altered since author signed it. | Does not prove the image depicts real-world physical events or wasn't AI-generated prior to signing. |
+
+---
+
+## Monorepo Directory Layout
 
 ```text
 veil/
-├── backend/                  # Java 21 Spring Boot application
+├── backend/                              # Java 21 Spring Boot Application
 │   ├── src/main/java/com/veil/
-│   │   ├── config/           # CORS, OpenAPI, SQLite database config
-│   │   ├── controller/       # REST API endpoints
-│   │   ├── crypto/           # AES-GCM and PBKDF2 primitives
-│   │   ├── steganography/    # LSB encoder, decoder, bit streams
-│   │   ├── payload/          # BinaryEnvelope, framing codecs
-│   │   ├── image/            # Image validator, capacity calculator, diff metrics
-│   │   ├── repository/       # SQLite operation history repository
-│   │   └── service/          # Steganography, encryption, capacity services
-│   └── src/test/java/        # Comprehensive JUnit 5 and integration tests
-├── frontend/                 # React 18 TypeScript application
+│   │   ├── config/                       # CORS, SQLite WAL, OpenAPI documentation
+│   │   ├── controller/                   # REST API & SPA route forwarding controllers
+│   │   ├── crypto/                       # Argon2id, HKDF, AES-256-GCM primitives
+│   │   ├── deniability/                  # Dual-payload plausible deniability engine
+│   │   ├── fec/                          # Pure-Java Reed-Solomon GF(2⁸) codec
+│   │   ├── image/                        # Capacity calculator, sub-pixel difference metrics
+│   │   ├── payload/                      # BinaryEnvelope, versioned framing codecs
+│   │   ├── provenance/                   # Ed25519 digital signature signing & verification
+│   │   ├── repository/                   # SQLite operation history repository
+│   │   ├── service/                      # Core steganography, encryption, and analysis services
+│   │   ├── sharing/                      # Shamir (K, N) secret sharing polynomial engine
+│   │   └── steganography/                # Keyed scatter, sequential LSB, and 2D-DCT strategies
+│   └── src/test/java/com/veil/           # 62 unit, integration, and benchmark tests
+├── frontend/                             # React 18 TypeScript Web Studio
 │   ├── src/
-│   │   ├── app/              # App root, ThemeProvider, ToastProvider
-│   │   ├── components/       # Shared UI, dropzones, sliders, capacity ring
-│   │   ├── features/         # Workspaces: Hide, Extract, Compare, Security, History, Explorer
-│   │   └── services/         # Typed REST client
-│   └── dist/                 # Production build bundle
-├── docs/                     # Technical documentation suite
-├── scripts/                  # One-click startup and test scripts
-└── LICENSE                   # Apache 2.0 Open Source License
+│   │   ├── app/                          # App root, ThemeProvider, ToastProvider
+│   │   ├── components/
+│   │   │   ├── brand/                    # VEIL vector logos and brand symbols
+│   │   │   ├── landing/                  # Editorial HeroSection & FaqSection accordion
+│   │   │   ├── layout/                   # AppShell, Linear navigation, BottomStatusBar
+│   │   │   ├── navigation/               # CommandPalette (⌘K), Sidebar
+│   │   │   ├── studio/                   # 6-stage progressive choreography components
+│   │   │   └── ui/                       # Spring ThemeSwitcher knob, BentoCard, PillBadge
+│   │   ├── features/                     # Studio, Compare, Security, History, Explorer, Provenance
+│   │   ├── services/                     # Typed REST API client
+│   │   └── utils/                        # Air-gapped offline steganography engine
+│   └── dist/                             # Optimized Vite production build bundle
+├── docs/                                 # Technical documentation & image assets
+│   ├── images/                           # Full-fidelity interface screenshots
+│   ├── architecture/                     # System design and deployment guides
+│   ├── cryptography/                     # Cryptographic specifications & proofs
+│   └── steganography/                    # Steganographic limits & benchmarking reports
+├── scripts/                              # Local automation and startup scripts
+├── Dockerfile                            # Multi-stage production container
+├── render.yaml                           # 1-Click Render.com deployment blueprint
+└── LICENSE                               # Apache 2.0 Open Source License
 ```
 
 ---
 
 ## License
 
-Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) for details.
+Licensed under the **Apache License, Version 2.0** (the "License"). You may obtain a copy of the License at:
+
+```
+http://www.apache.org/licenses/LICENSE-2.0
+```
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

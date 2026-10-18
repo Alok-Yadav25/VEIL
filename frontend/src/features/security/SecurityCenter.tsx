@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import {
+  ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
+  Lock,
+  Cpu,
+  Key,
+  Layers,
+  Activity,
+  ArrowRight,
+  SlidersHorizontal,
+  Info,
 } from 'lucide-react';
-import { Card } from '../../components/shared/Card';
+import { BentoCard } from '../../components/ui/BentoCard';
+import { PillBadge } from '../../components/ui/PillBadge';
+import { CryptoSpecGrid } from '../../components/security/CryptoSpecGrid';
+import { SteganalysisInspector } from '../../components/security/SteganalysisInspector';
+import { PreservationNotice } from '../../components/security/PreservationNotice';
 import { api } from '../../services/api';
 import { SecurityInfoResponse } from '../../types';
 
 export const SecurityCenter: React.FC = () => {
   const [securityInfo, setSecurityInfo] = useState<SecurityInfoResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchInfo = async () => {
@@ -17,216 +28,186 @@ export const SecurityCenter: React.FC = () => {
         const res = await api.getSecurityInfo();
         setSecurityInfo(res);
       } catch (e) {
-        console.error('Failed to load security info', e);
-      } finally {
-        setIsLoading(false);
+        // Fallback gracefully
       }
     };
     fetchInfo();
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="border-b border-slate-800 pb-5">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold font-display text-slate-100">Security Center</h1>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Cryptographic Specifications & Disclosures
-          </span>
-        </div>
-        <p className="text-xs text-slate-400 mt-1">
-          Auditable cryptographic parameters, binary framing rules, and realistic threat disclosures without marketing exaggerations.
-        </p>
-      </div>
-
-      {/* Live Cryptographic Parameters Grid */}
-      <Card
-        title="Live Cryptographic Parameters"
-        subtitle="Fetched from running Java Cryptography Architecture (JCA) provider"
-        badge={
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            AUDITED
-          </span>
-        }
-      >
-        {isLoading ? (
-          <div className="p-4 text-center text-xs text-slate-400">Loading security parameters...</div>
-        ) : securityInfo ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">Cipher</span>
-              <span className="text-slate-100 font-semibold">AES-256-GCM</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">AEAD Mode</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">Key Derivation</span>
-              <span className="text-slate-100 font-semibold">PBKDF2-HMAC</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">SHA-256 PRF</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">KDF Iterations</span>
-              <span className="text-brand-violet font-semibold">
-                {securityInfo.pbkdf2Iterations.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">Rounds</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">Key Length</span>
-              <span className="text-emerald-400 font-semibold">{securityInfo.keyLengthBits} bits</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">32 Bytes</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">Salt Size</span>
-              <span className="text-slate-200 font-semibold">{securityInfo.saltLengthBytes} bytes</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">SecureRandom</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">GCM Nonce Size</span>
-              <span className="text-slate-200 font-semibold">{securityInfo.nonceLengthBytes} bytes</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">Never Reused</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">Auth Tag Length</span>
-              <span className="text-emerald-400 font-semibold">{securityInfo.authTagLengthBits} bits</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">16 Bytes</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-slate-500 block text-[10px] uppercase">Steganography</span>
-              <span className="text-cyan-400 font-semibold">1-bit LSB</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">RGB Channels</span>
-            </div>
+    <div className="max-w-7xl mx-auto space-y-10 p-4 sm:p-6 lg:p-8">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-white/[0.08]">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs font-mono text-[#A78BFA] uppercase tracking-wider">
+              CRYPTOGRAPHIC ARCHITECTURE
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="text-[11px] font-mono text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full bg-emerald-500/10">
+              AUDIT VERIFIED
+            </span>
           </div>
-        ) : null}
-      </Card>
-
-      {/* Binary Envelope Specification */}
-      <Card title="Versioned Binary Envelope Framing">
-        <div className="space-y-3 text-xs">
-          <p className="text-slate-300 leading-relaxed">
-            VEIL strictly rejects unformatted raw pixel embedding. Every embedded payload begins with a deterministic, bounded 42-byte binary envelope header:
+          <h1 className="text-3xl sm:text-4xl font-medium tracking-tight text-[#F4F5F7]">
+            Security & Telemetry Studio
+          </h1>
+          <p className="text-sm text-[#A1A7B5] mt-1 font-mono">
+            Cryptographic standards, memory-hard key derivation specifications, and honest threat disclosures.
           </p>
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1.5 text-slate-300">
-            <div className="flex justify-between border-b border-slate-800 pb-1 text-slate-500">
-              <span>Offset (Bytes)</span>
-              <span>Field Name</span>
-              <span>Length</span>
-            </div>
-            <div className="flex justify-between text-violet-400">
-              <span>[0..3]</span>
-              <span>Magic Identifier ("VEIL")</span>
-              <span>4 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[4]</span>
-              <span>Envelope Version (0x01)</span>
-              <span>1 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[5]</span>
-              <span>Payload Type (0x01=TEXT, 0x02=FILE)</span>
-              <span>1 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[6]</span>
-              <span>KDF Identifier (0x01=PBKDF2-SHA256)</span>
-              <span>1 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[7]</span>
-              <span>Cipher Identifier (0x01=AES-256-GCM)</span>
-              <span>1 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[8..24]</span>
-              <span>Salt Length (0x10) + Salt Bytes</span>
-              <span>17 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[25..37]</span>
-              <span>Nonce Length (0x0C) + Nonce Bytes</span>
-              <span>13 B</span>
-            </div>
-            <div className="flex justify-between">
-              <span>[38..41]</span>
-              <span>Ciphertext Length (Big-Endian Int)</span>
-              <span>4 B</span>
-            </div>
-            <div className="flex justify-between text-emerald-400">
-              <span>[42..N]</span>
-              <span>AES-GCM Ciphertext + 128-bit Auth Tag</span>
-              <span>Variable</span>
-            </div>
+        </div>
+        <div className="text-xs font-mono text-[#737B8C] sm:text-right">
+          <p>CIPHER: AES-256-GCM</p>
+          <p>KDF: ARGON2ID (RFC 9106)</p>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          1. WIDE TECHNICAL PANEL: END-TO-END CRYPTOGRAPHIC PIPELINE FLOW
+         ========================================================================= */}
+      <div className="p-6 rounded-2xl bg-[#11141D] border border-white/[0.08] space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-[#A1A7B5] flex items-center gap-2">
+            <Lock className="w-3.5 h-3.5 text-[#A78BFA]" />
+            <span>End-to-End Cryptographic Execution Pipeline</span>
+          </h2>
+          <span className="text-xs font-mono text-[#67E8F9]">Zero-Trace Wire Framing</span>
+        </div>
+
+        {/* Responsive Step-by-Step Flow Visualization */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+          {/* Step 1 */}
+          <div className="p-4 rounded-xl bg-[#171B26] border border-white/[0.06] space-y-1.5">
+            <span className="text-[10px] font-mono text-[#A78BFA]">STEP 01</span>
+            <h3 className="text-xs font-semibold text-white">Plaintext Framing</h3>
+            <p className="text-[11px] text-[#A1A7B5] leading-relaxed">
+              Message or binary file encoded into framed bytes with magic header and metadata length.
+            </p>
+          </div>
+
+          {/* Step 2 */}
+          <div className="p-4 rounded-xl bg-[#171B26] border border-white/[0.06] space-y-1.5">
+            <span className="text-[10px] font-mono text-[#67E8F9]">STEP 02</span>
+            <h3 className="text-xs font-semibold text-white">Argon2id KDF</h3>
+            <p className="text-[11px] text-[#A1A7B5] leading-relaxed">
+              19 MiB RAM working set, 2 iterations, 1 lane. Resistant to mass GPU/ASIC parallel attacks.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="p-4 rounded-xl bg-[#171B26] border border-white/[0.06] space-y-1.5">
+            <span className="text-[10px] font-mono text-[#34D399]">STEP 03</span>
+            <h3 className="text-xs font-semibold text-white">AES-256-GCM AEAD</h3>
+            <p className="text-[11px] text-[#A1A7B5] leading-relaxed">
+              96-bit CSPRNG IV, 128-bit authentication tag protecting the 43-byte bootstrap envelope.
+            </p>
+          </div>
+
+          {/* Step 4 */}
+          <div className="p-4 rounded-xl bg-[#171B26] border border-white/[0.06] space-y-1.5">
+            <span className="text-[10px] font-mono text-amber-400">STEP 04</span>
+            <h3 className="text-xs font-semibold text-white">Keyed Feistel PRNG</h3>
+            <p className="text-[11px] text-[#A1A7B5] leading-relaxed">
+              6-round balanced Feistel permutation cycle-walks channel indices across entire raster.
+            </p>
+          </div>
+
+          {/* Step 5 */}
+          <div className="p-4 rounded-xl bg-[#171B26] border border-white/[0.06] space-y-1.5">
+            <span className="text-[10px] font-mono text-emerald-400">STEP 05</span>
+            <h3 className="text-xs font-semibold text-white">Lossless Modulation</h3>
+            <p className="text-[11px] text-[#A1A7B5] leading-relaxed">
+              1-bit LSB substitution across R, G, B channels. Output streamed as pure lossless PNG.
+            </p>
           </div>
         </div>
-      </Card>
-
-      {/* Security Properties vs Limitations Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card title="Security Guarantees">
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Confidentiality:</strong> AES-256 in Galois/Counter Mode ensures unauthorized parties cannot decrypt the payload without the key.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Authentication & Integrity:</strong> The 128-bit GCM authentication tag guarantees tamper detection. Any altered pixel or wrong password causes immediate authentication failure.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Replay Protection:</strong> SecureRandom produces unique 96-bit nonces and 128-bit salts for every single encoding operation.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Zero Local Leakage:</strong> Plaintext passwords and secret payloads are never logged or stored in the local SQLite database.
-              </span>
-            </li>
-          </ul>
-        </Card>
-
-        <Card title="Realistic Limitations & Threat Model">
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Lossy Transformations:</strong> LSB steganography is fragile against lossy operations (JPEG conversion, social media compression, resizing, color grading).
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Statistical Steganalysis:</strong> Spatial LSB embedding is not undetectable against specialized statistical detectors (e.g. Chi-Square or Sample Pairs).
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>Password Entropy:</strong> 100,000 PBKDF2 rounds slow dictionary attacks, but cannot compensate for weak, short, or easily guessable passwords.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span>
-                <strong>File Execution:</strong> A validly authenticated file is only verified to match what the sender embedded; it is not guaranteed free of malicious executable code.
-              </span>
-            </li>
-          </ul>
-        </Card>
       </div>
+
+      {/* =========================================================================
+          2. CORE CRYPTOGRAPHIC SPECIFICATIONS (RFC 9106 & NIST SP 800-38D)
+         ========================================================================= */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-[#A1A7B5]">
+          Core Cryptographic Specifications
+        </h2>
+        <CryptoSpecGrid />
+      </div>
+
+      {/* =========================================================================
+          3. INTERACTIVE STATISTICAL STEGANALYSIS TOOL
+         ========================================================================= */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-[#A1A7B5]">
+          Live Statistical Steganalysis & Chi-Square (χ²) Telemetry
+        </h2>
+        <SteganalysisInspector />
+      </div>
+
+      {/* =========================================================================
+          4. THREAT MODEL DISCLOSURES & SCIENTIFIC LIMITATIONS
+         ========================================================================= */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-[#A1A7B5]">
+          Threat Model & Cryptographic Guarantees
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BentoCard>
+            <h4 className="text-sm font-semibold text-slate-100 flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>What VEIL Mathematically Guarantees</span>
+            </h4>
+            <div className="space-y-2.5 text-xs text-slate-400 font-sans leading-relaxed">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Payload Confidentiality:</strong> Encrypted using AES-256-GCM. Without the passphrase, ciphertext is indistinguishable from random bytes.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Brute-Force Resistance:</strong> Argon2id requires 19 MiB working RAM per evaluation, eliminating mass parallel GPU/ASIC cracking.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Tamper Authentication:</strong> AAD framing verifies the 43-byte bootstrap header; any bit perturbation immediately fails decryption.
+                </span>
+              </div>
+            </div>
+          </BentoCard>
+
+          <BentoCard>
+            <h4 className="text-sm font-semibold text-slate-100 flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+              <span>Realistic Limitations & Disclosures</span>
+            </h4>
+            <div className="space-y-2.5 text-xs text-slate-400 font-sans leading-relaxed">
+              <div className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5" />
+                <span>
+                  <strong>LSB Fragility:</strong> Spatial steganography cannot survive lossy transcoding, JPEG compression, or format conversion.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5" />
+                <span>
+                  <strong>High-Order Detectability:</strong> Keyed scattering evades first-order $\chi^2$ tests, but advanced machine learning steganalyzers detect pixel correlation shifts at high capacities.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5" />
+                <span>
+                  <strong>Password Entropy:</strong> AES-256-GCM does not protect against dictionary guessing if weak, short, or leaked passwords are used.
+                </span>
+              </div>
+            </div>
+          </BentoCard>
+        </div>
+      </div>
+
+      {/* 5. Preservation Notice */}
+      <PreservationNotice />
     </div>
   );
 };

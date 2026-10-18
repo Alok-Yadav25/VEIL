@@ -1,290 +1,219 @@
 import React, { useState } from 'react';
-import {
-  Unlock,
-  CheckCircle2,
-  Copy,
-  Download,
-  FileText,
-  ShieldCheck,
-  RefreshCw,
-  AlertCircle,
-  Hash,
-  ShieldAlert,
-} from 'lucide-react';
-import { ImageDropzone } from '../../components/upload/ImageDropzone';
-import { PasswordField } from '../../components/forms/PasswordField';
-import { Button } from '../../components/shared/Button';
-import { Card } from '../../components/shared/Card';
+import { Eye, ArrowRight, ShieldCheck, AlertCircle, Shield } from 'lucide-react';
+import { TopMetricsStrip } from '../../components/layout/TopMetricsStrip';
+import { CarrierViewport } from '../../components/studio/CarrierViewport';
+import { CryptoKeyPanel } from '../../components/studio/CryptoKeyPanel';
+import { ExecutionStepper } from '../../components/studio/ExecutionStepper';
+import { ResultBento, ExtractResultData } from '../../components/studio/ResultBento';
+import { BentoCard } from '../../components/ui/BentoCard';
 import { useToast } from '../../components/feedback/Toast';
 import { api, ApiError } from '../../services/api';
+import { offlineExtractText } from '../../utils/offlineStegoEngine';
 import { ExtractResponse } from '../../types';
 
 export const ExtractDataWorkspace: React.FC = () => {
-  const { success, error: toastError, info } = useToast();
+  const { success, error: toastError } = useToast();
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [carrierFile, setCarrierFile] = useState<File | null>(null);
+  const [carrierPreviewUrl, setCarrierPreviewUrl] = useState<string | null>(null);
+  const [carrierDimensions, setCarrierDimensions] = useState<{ width: number; height: number } | null>(null);
+
   const [password, setPassword] = useState<string>('');
+  const [isAirGapped, setIsAirGapped] = useState<boolean>(false);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
-  const [extractedResult, setExtractedResult] = useState<ExtractResponse | null>(null);
+  const [executionStep, setExecutionStep] = useState<number>(1);
+
+  const [extractResult, setExtractResult] = useState<ExtractResultData | null>(null);
   const [extractionError, setExtractionError] = useState<string | null>(null);
 
+  const handleCarrierSelect = (file: File) => {
+    setCarrierFile(file);
+    setExtractionError(null);
+    setExtractResult(null);
+    const url = URL.createObjectURL(file);
+    setCarrierPreviewUrl(url);
+
+    const img = new Image();
+    img.onload = () => {
+      setCarrierDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.src = url;
+  };
+
+  const handleCarrierClear = () => {
+    if (carrierPreviewUrl) {
+      URL.revokeObjectURL(carrierPreviewUrl);
+    }
+    setCarrierFile(null);
+    setCarrierPreviewUrl(null);
+    setCarrierDimensions(null);
+    setExtractResult(null);
+    setExtractionError(null);
+  };
+
   const handleExtract = async () => {
-    if (!imageFile) {
-      toastError('Please upload an encoded carrier image.');
-      return;
-    }
-    if (!password) {
-      toastError('Please enter the decryption password.');
-      return;
-    }
+    if (!carrierFile || !password) return;
 
     setIsExtracting(true);
     setExtractionError(null);
-    setExtractedResult(null);
+    setExecutionStep(1);
 
     try {
-      const res = await api.extractPayload(imageFile, password);
-      setExtractedResult(res);
+      await new Promise((r) => setTimeout(r, 200));
+      setExecutionStep(2);
+      await new Promise((r) => setTimeout(r, 200));
+      setExecutionStep(3);
+
+      if (isAirGapped) {
+        const offlineRes = await offlineExtractText(carrierFile, password);
+        setExtractResult({
+          operationId: 'offline_' + Date.now(),
+          payloadType: 'TEXT',
+          recoveredText: offlineRes.text,
+          recoveredSizeBytes: offlineRes.payloadBytes,
+          authenticationPassed: true,
+          envelopeVersion: 2,
+          encryptionAlgorithm: 'AES-256-GCM (WebCrypto In-Browser Sandbox)',
+          kdfAlgorithm: 'PBKDF2-SHA-256 (100,000 iterations)',
+        });
+      } else {
+        const res = await api.extractPayload(carrierFile, password);
+        setExtractResult({
+          operationId: res.operationId,
+          payloadType: res.payloadType,
+          recoveredText: res.recoveredText,
+          recoveredFileBase64: res.recoveredFileBase64,
+          originalFilename: res.originalFilename,
+          sanitizedFilename: res.sanitizedFilename,
+          recoveredSizeBytes: res.recoveredSizeBytes,
+          sha256Checksum: res.sha256Checksum,
+          authenticationPassed: res.authenticationPassed,
+          envelopeVersion: res.envelopeVersion,
+          encryptionAlgorithm: res.encryptionAlgorithm,
+          kdfAlgorithm: res.keyDerivationAlgorithm,
+        });
+      }
+
       success('Payload authenticated and recovered successfully!');
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ApiError) {
         setExtractionError(err.message);
         toastError(err.message, 'Extraction Failed');
       } else {
-        const msg = 'Failed to extract payload. Ensure the image contains a VEIL payload and password is correct.';
-        setExtractionError(msg);
-        toastError(msg, 'Extraction Error');
+        const fallback =
+          'Authentication failed. Verify that the image contains a valid VEIL envelope and the passphrase is correct.';
+        setExtractionError(fallback);
+        toastError(fallback, 'Decryption Error');
       }
     } finally {
       setIsExtracting(false);
     }
   };
 
-  const handleCopyText = () => {
-    if (!extractedResult?.recoveredText) return;
-    navigator.clipboard.writeText(extractedResult.recoveredText);
-    info('Message copied to clipboard.');
-  };
-
-  const handleDownloadTextAsTxt = () => {
-    if (!extractedResult?.recoveredText) return;
-    const blob = new Blob([extractedResult.recoveredText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'recovered_message.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadFile = () => {
-    if (!extractedResult?.recoveredFileBase64) return;
-    const a = document.createElement('a');
-    a.href = `data:application/octet-stream;base64,${extractedResult.recoveredFileBase64}`;
-    a.download = extractedResult.sanitizedFilename || 'recovered_payload.bin';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   const handleReset = () => {
-    setImageFile(null);
+    handleCarrierClear();
     setPassword('');
-    setExtractedResult(null);
+    setExtractResult(null);
     setExtractionError(null);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="border-b border-slate-800 pb-5">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold font-display text-slate-100">Extract Data</h1>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Authenticated AES-GCM
-          </span>
-        </div>
-        <p className="text-xs text-slate-400 mt-1">
-          Recover, authenticate, and decrypt hidden text or binary files from steganographic carrier images.
-        </p>
-      </div>
+    <div className="flex-1 flex flex-col min-w-0">
+      {/* Top KPI Telemetry Strip */}
+      <TopMetricsStrip
+        carrierLoaded={!!carrierFile}
+        carrierDimensions={carrierDimensions || undefined}
+        usableCapacityBytes={0}
+        payloadBytes={extractResult?.recoveredSizeBytes || 0}
+        payloadType={extractResult?.payloadType || 'TEXT'}
+        hasPassword={password.length > 0}
+      />
 
-      {!extractedResult ? (
-        <div className="space-y-6">
-          <Card
-            title="Step 1: Upload Encoded Carrier Image"
-            subtitle="Select the PNG or BMP image containing the hidden VEIL payload"
-          >
-            <ImageDropzone
-              selectedFile={imageFile}
-              onFileSelect={setImageFile}
-              label="Drop your encoded PNG or BMP image here, or browse"
-            />
-          </Card>
-
-          <Card
-            title="Step 2: Enter Decryption Password"
-            subtitle="Required to derive the AES-256 key and verify the 128-bit GCM authentication tag"
-          >
-            <PasswordField
-              value={password}
-              onChange={setPassword}
-              label="Password"
-              placeholder="Enter the password used during encoding..."
-              showStrength={false}
-              required
-            />
-          </Card>
-
-          {extractionError && (
-            <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/30 text-red-200 text-xs flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-red-300">Extraction or Decryption Failed</p>
-                <p className="mt-1 leading-relaxed text-slate-300">{extractionError}</p>
-              </div>
+      {/* Main Studio Two-Column Viewport */}
+      <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        {extractResult ? (
+          /* Decrypted Result View */
+          <ResultBento
+            type="EXTRACT"
+            extractData={extractResult}
+            onReset={handleReset}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column — Encoded Carrier Dropzone / Viewport */}
+            <div className="lg:col-span-6 space-y-4">
+              <CarrierViewport
+                selectedFile={carrierFile}
+                imagePreviewUrl={carrierPreviewUrl}
+                onFileSelect={handleCarrierSelect}
+                onFileClear={handleCarrierClear}
+                dimensions={carrierDimensions}
+                errorMessage={extractionError}
+              />
             </div>
-          )}
 
-          <div className="flex justify-end">
-            <Button
-              variant="cyan"
-              size="lg"
-              disabled={!imageFile || !password || isExtracting}
-              isLoading={isExtracting}
-              onClick={handleExtract}
-              leftIcon={<Unlock className="w-4 h-4" />}
-            >
-              Authenticate & Decrypt
-            </Button>
+            {/* Right Column — Bento Stack (Passphrase & Extraction Controls) */}
+            <div className="lg:col-span-6 space-y-4">
+              {isExtracting ? (
+                <ExecutionStepper currentStep={executionStep} operationType="EXTRACT" />
+              ) : (
+                <>
+                  <BentoCard>
+                    <div className="pb-3 mb-3 border-b border-[#1E2330] flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                          <span>Authenticated Steganographic Recovery</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 font-mono mt-0.5">
+                          Reads bootstrap header, verifies AAD framing, and decrypts confidential payload.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsAirGapped(!isAirGapped)}
+                        className={`py-1.5 px-3 rounded-lg border font-mono text-[11px] flex items-center gap-1.5 transition-all ${
+                          isAirGapped
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm'
+                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                        }`}
+                      >
+                        <Shield className="w-3 h-3 text-cyan-400" />
+                        <span>Air-Gapped: {isAirGapped ? 'ON' : 'OFF'}</span>
+                      </button>
+                    </div>
+
+                    <CryptoKeyPanel
+                      password={password}
+                      onPasswordChange={setPassword}
+                      showConfirmation={false}
+                    />
+
+                    {extractionError && (
+                      <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 flex items-start gap-2 font-mono">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                        <span>{extractionError}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleExtract}
+                      disabled={!carrierFile || !password || isExtracting}
+                      className="mt-4 w-full bg-[#F8FAFC] text-[#090A0F] font-semibold text-sm py-3.5 px-6 rounded-xl hover:bg-white hover:shadow-[0_0_24px_rgba(34,211,238,0.35)] focus:ring-2 focus:ring-cyan-400 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                    >
+                      <Eye className="w-4 h-4 text-cyan-600" />
+                      <span>Authenticate & Extract Payload</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </button>
+                  </BentoCard>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <Card className="border-emerald-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-100">
-                    Authentication Passed & Payload Recovered
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    The 128-bit AES-GCM tag validated ciphertext integrity. No bit modifications detected.
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-              >
-                Extract Another
-              </Button>
-            </div>
-
-            {/* Content Display: Text Payload */}
-            {extractedResult.payloadType === 'TEXT' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono uppercase text-slate-400">
-                    Recovered Plaintext Message ({extractedResult.recoveredSizeBytes} bytes)
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleCopyText}
-                      leftIcon={<Copy className="w-3.5 h-3.5" />}
-                    >
-                      Copy Message
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDownloadTextAsTxt}
-                      leftIcon={<Download className="w-3.5 h-3.5" />}
-                    >
-                      Download .txt
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-sm font-mono text-slate-200 whitespace-pre-wrap max-h-80 overflow-y-auto leading-relaxed select-text">
-                  {extractedResult.recoveredText}
-                </div>
-              </div>
-            )}
-
-            {/* Content Display: File Payload */}
-            {extractedResult.payloadType === 'FILE' && (
-              <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-8 h-8 text-brand-violet shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-slate-100 font-mono">
-                        {extractedResult.sanitizedFilename}
-                      </p>
-                      <p className="text-xs text-slate-400 font-mono mt-0.5">
-                        Recovered size: {(extractedResult.recoveredSizeBytes / 1024).toFixed(2)} KB (
-                        {extractedResult.recoveredSizeBytes.toLocaleString()} bytes)
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleDownloadFile}
-                    leftIcon={<Download className="w-4 h-4" />}
-                  >
-                    Download Recovered File
-                  </Button>
-                </div>
-
-                {extractedResult.sha256Checksum && (
-                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex items-start gap-2.5 text-xs font-mono text-slate-400">
-                    <Hash className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                    <div className="break-all">
-                      <span className="text-slate-300 font-semibold block">
-                        SHA-256 Integrity Checksum:
-                      </span>
-                      {extractedResult.sha256Checksum}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Technical Verification Details */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-800 text-xs font-mono">
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase block">Cipher</span>
-                <span className="text-slate-200 font-semibold">AES-256-GCM</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase block">Key Derivation</span>
-                <span className="text-slate-200 font-semibold">PBKDF2-SHA-256</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase block">Envelope Version</span>
-                <span className="text-emerald-400 font-semibold">
-                  v{extractedResult.envelopeVersion} Verified
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase block">Auth Status</span>
-                <span className="text-emerald-400 font-semibold">GCM Tag Validated</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

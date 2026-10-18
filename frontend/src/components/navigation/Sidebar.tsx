@@ -12,6 +12,9 @@ import {
   Settings,
   HelpCircle,
   X,
+  Share2,
+  Layers,
+  Award,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -67,11 +70,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Compare Images',
           icon: <SlidersHorizontal className="w-4 h-4 text-cyan-400" />,
         },
+        {
+          id: 'sharding',
+          label: 'Secret Sharding',
+          icon: <Share2 className="w-4 h-4 text-violet-400" />,
+          badge: 'K of N',
+        },
       ],
     },
     {
       title: 'IMAGE INTELLIGENCE',
       items: [
+        {
+          id: 'bitplane',
+          label: 'Bit-Plane Slicer',
+          icon: <Layers className="w-4 h-4 text-cyan-400" />,
+          badge: 'Forensics',
+        },
+        {
+          id: 'provenance',
+          label: 'Image Provenance',
+          icon: <Award className="w-4 h-4 text-emerald-400" />,
+          badge: 'Ed25519',
+        },
         {
           id: 'analyzer',
           label: 'Capacity Analyzer',

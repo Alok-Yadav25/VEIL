@@ -4,6 +4,7 @@ import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
 import { useTheme } from '../../app/providers/ThemeProvider';
 import { useToast } from '../../components/feedback/Toast';
+import { ThemeSwitcher } from '../../components/ui/ThemeSwitcher';
 
 export const SettingsView: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -31,10 +32,16 @@ export const SettingsView: React.FC = () => {
 
       {/* Theme & Appearance */}
       <Card title="Appearance & Themes">
-        <div className="space-y-4">
-          <p className="text-xs text-slate-400">
-            Choose your preferred color theme. The theme setting is persisted in local browser storage.
-          </p>
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+            <div>
+              <span className="text-xs font-semibold text-slate-200 block">Active Theme</span>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Switch instantly with spring-loaded physical knob. Persisted in local storage.
+              </p>
+            </div>
+            <ThemeSwitcher variant="default" showLabels />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
             <button
@@ -50,7 +57,7 @@ export const SettingsView: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-semibold text-slate-100 block">Dark Midnight</span>
-                <span className="text-[11px] text-slate-400">Optimized for low-light environments</span>
+                <span className="text-[11px] text-slate-400">Deep obsidian background (#07080C)</span>
               </div>
             </button>
 
@@ -67,7 +74,7 @@ export const SettingsView: React.FC = () => {
               </div>
               <div>
                 <span className="text-xs font-semibold text-slate-100 block">High Contrast Light</span>
-                <span className="text-[11px] text-slate-400">Accessible high-contrast styling</span>
+                <span className="text-[11px] text-slate-400">Clean warm off-white (#FAFAF9)</span>
               </div>
             </button>
           </div>

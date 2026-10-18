@@ -39,6 +39,8 @@ test-results/
 # SQLite databases
 *.db
 *.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 backend/data/*.db
 backend/data/*.sqlite

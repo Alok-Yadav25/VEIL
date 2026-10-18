@@ -50,11 +50,28 @@ public class CapacityCalculator {
     }
 
     public CapacityEvaluation evaluateCapacity(int width, int height, long payloadBytes, String filename) {
+        return evaluateCapacity(width, height, payloadBytes, filename, CryptoConstants.FEC_MODE_NONE);
+    }
+
+    public CapacityEvaluation evaluateCapacity(int width, int height, long payloadBytes, String filename, byte fecMode) {
         long pixels = ((long) width) * height;
         long raw = calculateRawCapacityBytes(width, height);
         long overhead = calculateOverheadBytes(filename);
-        long usable = Math.max(0, raw - overhead);
 
+        // Account for FEC parity blocks if active
+        long fecOverhead = 0;
+        if (fecMode == CryptoConstants.FEC_MODE_BALANCED) {
+            // RS(255, 239) => ~6.7% parity + 2 bytes per block + 6 byte header
+            long blocks = Math.max(1, (payloadBytes + 238) / 239);
+            fecOverhead = 6 + (blocks * 18);
+        } else if (fecMode == CryptoConstants.FEC_MODE_HIGH) {
+            // RS(255, 223) => ~14.3% parity + 2 bytes per block + 6 byte header
+            long blocks = Math.max(1, (payloadBytes + 222) / 223);
+            fecOverhead = 6 + (blocks * 34);
+        }
+        overhead += fecOverhead;
+
+        long usable = Math.max(0, raw - overhead);
         long estimatedTotal = payloadBytes + overhead;
         long remaining = raw - estimatedTotal;
 

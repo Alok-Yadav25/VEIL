@@ -1,0 +1,24 @@
+# Version control
+.git
+.gitignore
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/.nyc_output
+frontend/coverage
+
+# Backend
+backend/target
+backend/.mvn
+backend/*.db
+backend/*.db-wal
+backend/*.db-shm
+*.log
+
+# IDE & OS
+.DS_Store
+.idea
+.vscode
+*.iml

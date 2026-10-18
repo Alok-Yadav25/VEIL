@@ -18,9 +18,19 @@ OpenAPI JSON specification is available at:
 | `POST` | `/images/analyze` | `multipart/form-data` | Capacity analysis & preflight check |
 | `POST` | `/images/inspect` | `multipart/form-data` | Deep technical format & pixel inspection |
 | `POST` | `/steganography/encode/text` | `multipart/form-data` | Encrypt & embed text message into image |
+| `POST` | `/steganography/encode/text/binary` | `multipart/form-data` | Stream binary PNG directly with metadata headers |
 | `POST` | `/steganography/encode/file` | `multipart/form-data` | Encrypt & embed binary file into image |
-| `POST` | `/steganography/extract` | `multipart/form-data` | Decrypt & authenticate payload from image |
+| `POST` | `/steganography/encode/file/binary` | `multipart/form-data` | Stream binary PNG directly with metadata headers |
+| `POST` | `/steganography/encode/dual` | `multipart/form-data` | Plausible deniability dual-payload (Primary & Decoy) |
+| `POST` | `/steganography/extract` | `multipart/form-data` | Decrypt & authenticate payload from image (with dual fallback) |
+| `POST` | `/steganography/extract/dual` | `multipart/form-data` | Explicit dual partition extraction with password |
+| `POST` | `/steganography/sharding/split` | `multipart/form-data` | Shamir (K, N) secret distribution across images |
+| `POST` | `/steganography/sharding/combine` | `multipart/form-data` | Reconstruct secret from M carrier shares (M >= K) |
 | `POST` | `/steganography/compare` | `multipart/form-data` | Compare original vs stego image (PSNR/MSE) |
+| `POST` | `/steganalysis/analyze` | `multipart/form-data` | Chi-Square & Sample Pair Analysis (SPA) detection |
+| `GET` | `/provenance/keypair` | `application/json` | Generate Ed25519 signing keypair |
+| `POST` | `/provenance/sign` | `multipart/form-data` | Sign raster image with Ed25519 private key |
+| `POST` | `/provenance/verify` | `multipart/form-data` | Verify raster against Ed25519 digital signature |
 | `GET` | `/security/info` | `application/json` | Retrieve active cryptographic specifications |
 | `GET` | `/history` | `application/json` | Paginated operation history with filters |
 | `GET` | `/history/{id}` | `application/json` | Single operation metadata details |

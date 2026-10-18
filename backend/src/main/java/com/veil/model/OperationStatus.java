@@ -3,5 +3,8 @@ package com.veil.model;
 public enum OperationStatus {
     SUCCESS,
     FAILED,
-    IN_PROGRESS
+    IN_PROGRESS,
+    ACCEPTED,
+    PROCESSING,
+    SUCCEEDED
 }

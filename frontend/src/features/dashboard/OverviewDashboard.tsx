@@ -1,22 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Lock,
-  Unlock,
-  SlidersHorizontal,
-  BarChart2,
-  Shield,
   ArrowRight,
-  HardDrive,
-  FileText,
-  Clock,
-  Sparkles,
+  Shield,
+  SlidersHorizontal,
+  Activity,
+  History,
+  Lock,
   Layers,
-  KeyRound,
-  FileCode,
-  CheckCircle2,
+  Award,
+  Share2,
 } from 'lucide-react';
-import { Button } from '../../components/shared/Button';
-import { Card } from '../../components/shared/Card';
+import { HeroSection } from '../../components/landing/HeroSection';
+import { FaqSection } from '../../components/landing/FaqSection';
 import { api } from '../../services/api';
 import { OperationRecord } from '../../types';
 
@@ -26,333 +21,164 @@ interface OverviewDashboardProps {
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate }) => {
   const [recentHistory, setRecentHistory] = useState<OperationRecord[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   useEffect(() => {
     const fetchRecent = async () => {
-      setIsLoadingHistory(true);
       try {
-        const res = await api.getHistory({ limit: 5 });
+        const res = await api.getHistory({ limit: 3 });
         setRecentHistory(res.items);
       } catch (e) {
-        console.error('Failed to load recent activity', e);
-      } finally {
-        setIsLoadingHistory(false);
+        // Backend offline fallback
       }
     };
     fetchRecent();
   }, []);
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Landing Experience / Hero */}
-      <div className="relative rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900/90 via-slate-900/50 to-slate-950 p-6 sm:p-10 overflow-hidden shadow-2xl">
-        <div className="absolute -right-20 -top-20 w-96 h-96 bg-brand-violet/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-brand-cyan/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 space-y-16">
+      
+      {/* =========================================================================
+          EDITORIAL HERO SECTION (Inspired by Hero14)
+         ========================================================================= */}
+      <HeroSection onNavigate={onNavigate} />
 
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            Offline-First Steganography Workspace
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-display text-slate-100 leading-tight">
-            Your secrets deserve <br className="hidden sm:inline" />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-400">
-              another layer.
+      {/* =========================================================================
+          EDITORIAL FEATURE EXHIBIT (Studio Instruments)
+         ========================================================================= */}
+      <section className="space-y-6 pt-8 border-t dark:border-white/[0.08] border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <span className="text-xs font-mono dark:text-[#A78BFA] text-violet-600 uppercase tracking-wider">
+              Studio Instruments
             </span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
-            Encode encrypted messages and binary files into carrier images using authenticated
-            AES-256-GCM and least-significant-bit steganography. Hide the payload. Protect its meaning.
-          </p>
-
-          <div className="pt-2 flex flex-wrap items-center gap-3">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => onNavigate('hide')}
-              leftIcon={<Lock className="w-4 h-4" />}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Start Encoding
-            </Button>
-            <Button
-              variant="cyan"
-              size="lg"
-              onClick={() => onNavigate('extract')}
-              leftIcon={<Unlock className="w-4 h-4" />}
-            >
-              Extract Payload
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => onNavigate('learn')}
-              leftIcon={<Layers className="w-4 h-4" />}
-            >
-              Explore Technology
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Action Cards */}
-      <div>
-        <h2 className="text-xs font-mono font-semibold tracking-wider uppercase text-slate-400 mb-3 px-1">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card
-            hoverable
-            onClick={() => onNavigate('hide')}
-            className="group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-brand-violet flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Lock className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm text-slate-100 group-hover:text-brand-violet transition-colors">
-              Hide Data
-            </h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Encrypt text or files and embed into lossless PNG/BMP carriers.
-            </p>
-          </Card>
-
-          <Card
-            hoverable
-            onClick={() => onNavigate('extract')}
-            className="group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Unlock className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm text-slate-100 group-hover:text-emerald-400 transition-colors">
-              Extract Payload
-            </h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Recover and authenticate hidden payloads using password decryption.
-            </p>
-          </Card>
-
-          <Card
-            hoverable
-            onClick={() => onNavigate('compare')}
-            className="group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-brand-cyan flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <SlidersHorizontal className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm text-slate-100 group-hover:text-brand-cyan transition-colors">
-              Compare Images
-            </h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Analyze pixel differences, PSNR metrics, and visual difference mask.
-            </p>
-          </Card>
-
-          <Card
-            hoverable
-            onClick={() => onNavigate('analyzer')}
-            className="group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <BarChart2 className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm text-slate-100 group-hover:text-indigo-400 transition-colors">
-              Capacity Analyzer
-            </h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Inspect carrier byte capacity before embedding sensitive payloads.
-            </p>
-          </Card>
-        </div>
-      </div>
-
-      {/* Visual Component: Payload Flow */}
-      <Card
-        title="VEIL Payload Architecture Flow"
-        subtitle="End-to-end cryptographic and steganographic pipeline"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-2">
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-slate-300 font-semibold text-xs">
-              <FileText className="w-4 h-4 text-violet-400" />
-              <span>1. SOURCE</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              Raw text (UTF-8) or binary file input with safe metadata.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-slate-300 font-semibold text-xs">
-              <FileCode className="w-4 h-4 text-indigo-400" />
-              <span>2. PAYLOAD</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              Versioned plaintext framing structure with content length.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-slate-300 font-semibold text-xs">
-              <KeyRound className="w-4 h-4 text-emerald-400" />
-              <span>3. ENCRYPTION</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              AES-256-GCM + PBKDF2 (100k rounds) with 128-bit auth tag.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-slate-300 font-semibold text-xs">
-              <Layers className="w-4 h-4 text-cyan-400" />
-              <span>4. EMBEDDING</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              LSB bit modulation across Red, Green, and Blue channels.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-slate-300 font-semibold text-xs">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>5. VERIFICATION</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              Auto-reopen PNG and verify recoverability before delivery.
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Two Column Grid: Recent Activity & Security Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Recent Activity */}
-        <div className="lg:col-span-2 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-mono font-semibold tracking-wider uppercase text-slate-400">
-              Recent Local Operations
+            <h2 className="text-2xl sm:text-3xl font-medium tracking-tight dark:text-[#F4F5F7] text-slate-900 mt-1">
+              Engineered for pixel-level certainty.
             </h2>
-            <button
-              onClick={() => onNavigate('history')}
-              className="text-xs text-brand-violet hover:text-brand-violet-hover font-medium flex items-center gap-1"
-            >
-              View Full History <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Instrument 1: Studio */}
+          <div
+            onClick={() => onNavigate('studio')}
+            className="p-5 rounded-2xl dark:bg-[#11141D] bg-white border dark:border-white/[0.08] border-slate-200 dark:hover:border-[#A78BFA]/50 hover:border-violet-400 transition-all duration-200 cursor-pointer group flex flex-col justify-between shadow-sm hover:shadow-md"
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl dark:bg-white/[0.04] bg-violet-50 dark:border-white/[0.08] border-violet-100 border flex items-center justify-center dark:text-[#A78BFA] text-violet-600 group-hover:scale-105 transition-transform">
+                <Lock className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-semibold dark:text-[#F4F5F7] text-slate-900 dark:group-hover:text-white group-hover:text-violet-600 transition-colors">
+                Steganography Studio
+              </h3>
+              <p className="text-xs dark:text-[#A1A7B5] text-slate-600 leading-relaxed">
+                6-stage progressive workflow to embed text or file payloads with Argon2id and Keyed Feistel PRNG scatter.
+              </p>
+            </div>
+            <div className="pt-4 mt-4 border-t dark:border-white/[0.06] border-slate-100 flex items-center justify-between text-xs font-mono dark:text-[#A78BFA] text-violet-600">
+              <span>Open Studio</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          <Card className="p-0 overflow-hidden">
-            {isLoadingHistory ? (
-              <div className="p-8 text-center text-xs text-slate-400">
-                Loading operation history from SQLite...
-              </div>
-            ) : recentHistory.length === 0 ? (
-              <div className="p-8 text-center space-y-3">
-                <Clock className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs text-slate-400">No operations recorded in local SQLite database yet.</p>
-                <Button variant="secondary" size="sm" onClick={() => onNavigate('hide')}>
-                  Perform First Encoding
-                </Button>
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-800/80">
-                {recentHistory.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-800/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          rec.status === 'SUCCESS'
-                            ? 'bg-emerald-500/10 text-emerald-400'
-                            : 'bg-red-500/10 text-red-400'
-                        }`}
-                      >
-                        {rec.operationType.includes('ENCODE') ? (
-                          <Lock className="w-4 h-4" />
-                        ) : rec.operationType.includes('EXTRACT') ? (
-                          <Unlock className="w-4 h-4" />
-                        ) : (
-                          <BarChart2 className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-slate-100">
-                            {rec.operationType.replace('_', ' ')}
-                          </span>
-                          <span
-                            className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                              rec.status === 'SUCCESS'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                            }`}
-                          >
-                            {rec.status}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                          {rec.inputFilename || 'carrier image'}
-                          {rec.outputFilename ? ` → ${rec.outputFilename}` : ''}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right text-[11px] text-slate-500 font-mono">
-                      {new Date(rec.createdAt).toLocaleString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-
-        {/* Right: Security Insight & Local Guarantee */}
-        <div className="space-y-4">
-          <Card
-            title="Local Privacy Guarantee"
-            badge={
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                ACTIVE
-              </span>
-            }
+          {/* Instrument 2: Pixel Inspection */}
+          <div
+            onClick={() => onNavigate('compare')}
+            className="p-5 rounded-2xl dark:bg-[#11141D] bg-white border dark:border-white/[0.08] border-slate-200 dark:hover:border-[#67E8F9]/50 hover:border-cyan-400 transition-all duration-200 cursor-pointer group flex flex-col justify-between shadow-sm hover:shadow-md"
           >
-            <div className="space-y-3 text-xs text-slate-400">
-              <div className="flex items-start gap-2.5">
-                <HardDrive className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <p>
-                  Zero cloud telemetry or remote uploads. All cryptographic derivations and steganography occur on your machine via the local Java backend.
-                </p>
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl dark:bg-white/[0.04] bg-cyan-50 dark:border-white/[0.08] border-cyan-100 border flex items-center justify-center dark:text-[#67E8F9] text-cyan-600 group-hover:scale-105 transition-transform">
+                <SlidersHorizontal className="w-4 h-4" />
               </div>
-              <div className="flex items-start gap-2.5">
-                <Shield className="w-4 h-4 text-brand-violet shrink-0 mt-0.5" />
-                <p>
-                  Plaintext passwords and secret payload contents are strictly held in volatile memory during operations and never written to SQLite disk.
-                </p>
-              </div>
+              <h3 className="text-base font-semibold dark:text-[#F4F5F7] text-slate-900 dark:group-hover:text-white group-hover:text-cyan-600 transition-colors">
+                Pixel Inspection
+              </h3>
+              <p className="text-xs dark:text-[#A1A7B5] text-slate-600 leading-relaxed">
+                Interactive split-curtain curtain, 10× difference heatmap amplification, and exact PSNR / MSE metrics.
+              </p>
             </div>
-          </Card>
+            <div className="pt-4 mt-4 border-t dark:border-white/[0.06] border-slate-100 flex items-center justify-between text-xs font-mono dark:text-[#67E8F9] text-cyan-600">
+              <span>Compare Images</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
 
-          <Card title="Security Insight">
-            <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-brand-violet pl-3 my-1">
-              "Encryption protects the confidentiality and integrity of the message. Steganography conceals the fact that communication is occurring at all. They solve two distinct security problems."
-            </p>
-            <p className="text-[11px] text-slate-400 mt-2">
-              LSB steganography resists visual detection, but can be detected by statistical steganalysis. Always use strong encryption alongside carrier concealment.
-            </p>
-          </Card>
+          {/* Instrument 3: Security & Telemetry */}
+          <div
+            onClick={() => onNavigate('security')}
+            className="p-5 rounded-2xl dark:bg-[#11141D] bg-white border dark:border-white/[0.08] border-slate-200 dark:hover:border-[#34D399]/50 hover:border-emerald-400 transition-all duration-200 cursor-pointer group flex flex-col justify-between shadow-sm hover:shadow-md"
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl dark:bg-white/[0.04] bg-emerald-50 dark:border-white/[0.08] border-emerald-100 border flex items-center justify-center dark:text-[#34D399] text-emerald-600 group-hover:scale-105 transition-transform">
+                <Activity className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-semibold dark:text-[#F4F5F7] text-slate-900 dark:group-hover:text-white group-hover:text-emerald-600 transition-colors">
+                Security Architecture
+              </h3>
+              <p className="text-xs dark:text-[#A1A7B5] text-slate-600 leading-relaxed">
+                Full cryptographic disclosures: AES-256-GCM AEAD, RFC 9106 Argon2id memory hardness, and Chi-Square analysis.
+              </p>
+            </div>
+            <div className="pt-4 mt-4 border-t dark:border-white/[0.06] border-slate-100 flex items-center justify-between text-xs font-mono dark:text-[#34D399] text-emerald-600">
+              <span>Examine Specs</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* Instrument 4: Operation History */}
+          <div
+            onClick={() => onNavigate('history')}
+            className="p-5 rounded-2xl dark:bg-[#11141D] bg-white border dark:border-white/[0.08] border-slate-200 dark:hover:border-white/30 hover:border-slate-400 transition-all duration-200 cursor-pointer group flex flex-col justify-between shadow-sm hover:shadow-md"
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.08] border-slate-200 border flex items-center justify-center dark:text-[#F4F5F7] text-slate-800 group-hover:scale-105 transition-transform">
+                <History className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-semibold dark:text-[#F4F5F7] text-slate-900 dark:group-hover:text-white group-hover:text-slate-900 transition-colors">
+                Operation History
+              </h3>
+              <p className="text-xs dark:text-[#A1A7B5] text-slate-600 leading-relaxed">
+                SQLite-backed audit trail of local operations. Plaintext payloads and passphrases are never persisted.
+              </p>
+            </div>
+            <div className="pt-4 mt-4 border-t dark:border-white/[0.06] border-slate-100 flex items-center justify-between text-xs font-mono dark:text-[#A1A7B5] text-slate-600">
+              <span>View Ledger</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
         </div>
-      </div>
+      </section>
+
+      {/* =========================================================================
+          HONEST THREAT MODEL & COMPLIANCE BAR
+         ========================================================================= */}
+      <section className="p-6 rounded-2xl dark:bg-[#0B0D13] bg-slate-50 border dark:border-white/[0.08] border-slate-200 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400 shrink-0">
+              <Shield className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold dark:text-white text-slate-900">Guaranteed Local Processing</h4>
+              <p className="text-xs dark:text-[#A1A7B5] text-slate-600 font-mono">
+                No third-party trackers, no remote analytics, no cloud payload uploads.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">AUDIT READY</span>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          STRUCTURED ACCORDION FAQ SECTION (Inspired by Faq4)
+         ========================================================================= */}
+      <FaqSection />
+
     </div>
   );
 };
+
+export default OverviewDashboard;

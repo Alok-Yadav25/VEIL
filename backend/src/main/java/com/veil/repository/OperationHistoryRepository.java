@@ -160,4 +160,9 @@ public class OperationHistoryRepository {
     public int deleteById(String id) {
         return jdbcTemplate.update("DELETE FROM operation_history WHERE id = ?", id);
     }
+
+    public int updateStatus(String id, OperationStatus status, String failureCategory) {
+        String sql = "UPDATE operation_history SET status = ?, completed_at = ?, failure_category = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, status.name(), java.time.Instant.now().toString(), failureCategory, id);
+    }
 }

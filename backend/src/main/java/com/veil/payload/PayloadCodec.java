@@ -1,5 +1,6 @@
 package com.veil.payload;
 
+import com.veil.crypto.CryptoConstants;
 import com.veil.exception.PayloadCorruptedException;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +14,11 @@ public class PayloadCodec {
 
     public static final String MAGIC = "VEIL";
     public static final byte[] MAGIC_BYTES = MAGIC.getBytes(StandardCharsets.US_ASCII);
-    public static final int ENVELOPE_VERSION = 1;
+    public static final int ENVELOPE_VERSION_1 = 1;
+    public static final int ENVELOPE_VERSION_2 = 2;
+    public static final int ENVELOPE_VERSION_3 = 3;
+    public static final int CURRENT_ENVELOPE_VERSION = 3;
     public static final int PLAINTEXT_VERSION = 1;
-
-    public static final int FIXED_HEADER_PREFIX_SIZE = 4 + 1 + 1 + 1 + 1 + 1; // 9 bytes: MAGIC (4), ver (1), type (1), kdf (1), cipher (1), saltLen (1)
 
     public byte[] serializePlaintext(PlaintextPayload payload) {
         if (payload == null) {
@@ -80,41 +82,76 @@ public class PayloadCodec {
         return new PlaintextPayload(version, payloadType, filename, content);
     }
 
-    public byte[] serializeEnvelope(BinaryEnvelope envelope) {
-        if (envelope == null) {
-            throw new IllegalArgumentException("Envelope cannot be null");
-        }
-        byte[] salt = envelope.getSalt();
-        byte[] nonce = envelope.getNonce();
-        byte[] ciphertext = envelope.getCiphertextWithTag();
-
-        int totalSize = 4 + 1 + 1 + 1 + 1 + 1 + salt.length + 1 + nonce.length + 4 + ciphertext.length;
-        ByteBuffer buffer = ByteBuffer.allocate(totalSize).order(ByteOrder.BIG_ENDIAN);
+    public byte[] buildHeaderBytes(int version, byte strategyCode, byte fecMode, PayloadType payloadType, byte kdfId, byte cipherId, byte[] salt, byte[] nonce, int ciphertextLength) {
+        int headerSize = (version >= 3) ? 44 : (version == 2 ? 43 : 42);
+        ByteBuffer buffer = ByteBuffer.allocate(headerSize).order(ByteOrder.BIG_ENDIAN);
 
         buffer.put(MAGIC_BYTES);
-        buffer.put((byte) envelope.getVersion());
-        buffer.put(envelope.getPayloadType().getCode());
-        buffer.put(envelope.getKdfId());
-        buffer.put(envelope.getCipherId());
+        buffer.put((byte) version);
+        if (version >= 2) {
+            buffer.put(strategyCode);
+        }
+        if (version >= 3) {
+            buffer.put(fecMode);
+        }
+        buffer.put(payloadType.getCode());
+        buffer.put(kdfId);
+        buffer.put(cipherId);
         buffer.put((byte) salt.length);
         buffer.put(salt);
         buffer.put((byte) nonce.length);
         buffer.put(nonce);
-        buffer.putInt(ciphertext.length);
-        buffer.put(ciphertext);
+        buffer.putInt(ciphertextLength);
 
         return buffer.array();
     }
 
+    public byte[] buildHeaderBytes(int version, byte strategyCode, PayloadType payloadType, byte kdfId, byte cipherId, byte[] salt, byte[] nonce, int ciphertextLength) {
+        return buildHeaderBytes(version, strategyCode, CryptoConstants.FEC_MODE_NONE, payloadType, kdfId, cipherId, salt, nonce, ciphertextLength);
+    }
+
+    public byte[] serializeEnvelopeHeader(BinaryEnvelope envelope) {
+        if (envelope == null) {
+            throw new IllegalArgumentException("Envelope cannot be null");
+        }
+        if (envelope.getRawHeaderBytes() != null) {
+            return envelope.getRawHeaderBytes();
+        }
+        return buildHeaderBytes(
+                envelope.getVersion(),
+                envelope.getStrategyCode(),
+                envelope.getFecMode(),
+                envelope.getPayloadType(),
+                envelope.getKdfId(),
+                envelope.getCipherId(),
+                envelope.getSalt(),
+                envelope.getNonce(),
+                envelope.getCiphertextWithTag().length
+        );
+    }
+
+    public byte[] serializeEnvelope(BinaryEnvelope envelope) {
+        byte[] headerBytes = serializeEnvelopeHeader(envelope);
+        byte[] ciphertext = envelope.getCiphertextWithTag();
+
+        byte[] full = new byte[headerBytes.length + ciphertext.length];
+        System.arraycopy(headerBytes, 0, full, 0, headerBytes.length);
+        System.arraycopy(ciphertext, 0, full, headerBytes.length, ciphertext.length);
+        return full;
+    }
+
     public record HeaderInfo(
             int version,
+            byte strategyCode,
+            byte fecMode,
             PayloadType payloadType,
             byte kdfId,
             byte cipherId,
             byte[] salt,
             byte[] nonce,
             int ciphertextLength,
-            int totalHeaderSize
+            int totalHeaderSize,
+            byte[] rawHeaderBytes
     ) {}
 
     public HeaderInfo parseHeader(byte[] headerData) {
@@ -130,8 +167,20 @@ public class PayloadCodec {
         }
 
         int version = buffer.get() & 0xFF;
-        if (version != ENVELOPE_VERSION) {
+        if (version != ENVELOPE_VERSION_1 && version != ENVELOPE_VERSION_2 && version != ENVELOPE_VERSION_3) {
             throw new PayloadCorruptedException("Unsupported VEIL envelope version: " + version, "UNSUPPORTED_VERSION");
+        }
+
+        byte strategyCode;
+        byte fecMode = CryptoConstants.FEC_MODE_NONE;
+        if (version >= 2) {
+            strategyCode = buffer.get();
+        } else {
+            strategyCode = CryptoConstants.STRATEGY_SEQUENTIAL_CODE; // Legacy Version 1 default
+        }
+
+        if (version >= 3) {
+            fecMode = buffer.get();
         }
 
         byte typeCode = buffer.get();
@@ -165,7 +214,10 @@ public class PayloadCodec {
         }
 
         int totalHeaderSize = buffer.position();
-        return new HeaderInfo(version, type, kdfId, cipherId, salt, nonce, ciphertextLength, totalHeaderSize);
+        byte[] rawHeaderBytes = new byte[totalHeaderSize];
+        System.arraycopy(headerData, 0, rawHeaderBytes, 0, totalHeaderSize);
+
+        return new HeaderInfo(version, strategyCode, fecMode, type, kdfId, cipherId, salt, nonce, ciphertextLength, totalHeaderSize, rawHeaderBytes);
     }
 
     public BinaryEnvelope deserializeEnvelope(byte[] fullData) {
@@ -187,12 +239,15 @@ public class PayloadCodec {
         return new BinaryEnvelope(
                 MAGIC,
                 header.version(),
+                header.strategyCode(),
+                header.fecMode(),
                 header.payloadType(),
                 header.kdfId(),
                 header.cipherId(),
                 header.salt(),
                 header.nonce(),
-                ciphertext
+                ciphertext,
+                header.rawHeaderBytes()
         );
     }
 }

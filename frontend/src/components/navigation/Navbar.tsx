@@ -9,6 +9,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { useTheme } from '../../app/providers/ThemeProvider';
+import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 
 interface NavbarProps {
   onOpenCommandPalette: () => void;
@@ -93,14 +94,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Search className="w-5 h-5" />
         </button>
 
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-colors"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
-        </button>
+        {/* Sliding Knob Theme Switcher */}
+        <ThemeSwitcher variant="compact" />
       </div>
     </header>
   );

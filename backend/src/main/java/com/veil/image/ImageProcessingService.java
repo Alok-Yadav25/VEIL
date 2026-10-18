@@ -10,8 +10,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.concurrent.Semaphore;
+
 @Service
 public class ImageProcessingService {
+
+    private static final int LARGE_RASTER_THRESHOLD_PIXELS = 4_000_000; // ~4 Megapixels
+    private final Semaphore largeRasterThrottle = new Semaphore(2, true);
 
     private final ImageValidator imageValidator;
     private final CapacityCalculator capacityCalculator;
@@ -19,6 +24,23 @@ public class ImageProcessingService {
     public ImageProcessingService(ImageValidator imageValidator, CapacityCalculator capacityCalculator) {
         this.imageValidator = imageValidator;
         this.capacityCalculator = capacityCalculator;
+    }
+
+    public void acquireRasterSlot(int width, int height) {
+        if ((long) width * height >= LARGE_RASTER_THRESHOLD_PIXELS) {
+            try {
+                largeRasterThrottle.acquire();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new com.veil.exception.SteganographyException("Interrupted while waiting for memory raster slot", "INTERRUPTED", e);
+            }
+        }
+    }
+
+    public void releaseRasterSlot(int width, int height) {
+        if ((long) width * height >= LARGE_RASTER_THRESHOLD_PIXELS) {
+            largeRasterThrottle.release();
+        }
     }
 
     public BufferedImage readSupportedImage(byte[] imageBytes, String filename) {

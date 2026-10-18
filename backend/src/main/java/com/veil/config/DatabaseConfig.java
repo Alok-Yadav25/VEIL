@@ -28,6 +28,11 @@ public class DatabaseConfig {
     public void initializeDatabase() {
         log.info("Initializing VEIL SQLite database schema...");
         try (Connection conn = dataSource.getConnection()) {
+            try (Statement pragmaStmt = conn.createStatement()) {
+                pragmaStmt.execute("PRAGMA journal_mode = WAL;");
+                pragmaStmt.execute("PRAGMA busy_timeout = 5000;");
+                pragmaStmt.execute("PRAGMA synchronous = NORMAL;");
+            }
             ResourceDatabasePopulator populator = new ResourceDatabasePopulator(new ClassPathResource("schema.sql"));
             populator.populate(conn);
 

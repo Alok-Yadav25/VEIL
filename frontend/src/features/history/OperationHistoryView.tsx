@@ -12,6 +12,7 @@ import {
   Eye,
   FileText,
   AlertTriangle,
+  ArrowRight,
 } from 'lucide-react';
 import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
@@ -20,7 +21,11 @@ import { useToast } from '../../components/feedback/Toast';
 import { api, ApiError } from '../../services/api';
 import { OperationRecord } from '../../types';
 
-export const OperationHistoryView: React.FC = () => {
+interface OperationHistoryViewProps {
+  onNavigate?: (viewId: string) => void;
+}
+
+export const OperationHistoryView: React.FC<OperationHistoryViewProps> = ({ onNavigate }) => {
   const { success, error: toastError, info } = useToast();
 
   const [records, setRecords] = useState<OperationRecord[]>([]);
@@ -81,38 +86,43 @@ export const OperationHistoryView: React.FC = () => {
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-white/[0.08]">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold font-display text-slate-100">Operation History</h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
-              SQLite 3 Local
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs font-mono text-[#A78BFA] uppercase tracking-wider">
+              ACTIVITY LEDGER
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="text-[11px] font-mono text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full bg-emerald-500/10">
+              SQLITE 3 (WAL)
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Persisted metadata records of local cryptographic and steganographic operations. Zero secrets stored.
+          <h1 className="text-3xl sm:text-4xl font-medium tracking-tight text-[#F4F5F7]">
+            Operation History
+          </h1>
+          <p className="text-sm text-[#A1A7B5] mt-1 font-mono">
+            Persisted metadata records of local cryptographic operations. Plaintext payloads and passphrases are never stored.
           </p>
         </div>
 
         {records.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setIsClearModalOpen(true)}
-            leftIcon={<Trash2 className="w-4 h-4 text-red-400" />}
-            className="text-red-400 hover:text-red-300 hover:bg-red-950/20"
+            className="px-3.5 py-2 rounded-xl bg-[#11141D] border border-red-500/30 hover:border-red-500/60 text-xs font-mono text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 cursor-pointer self-start sm:self-end"
           >
-            Clear History
-          </Button>
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear History</span>
+          </button>
         )}
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#11141D] p-3 rounded-2xl border border-white/[0.08]">
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#737B8C] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
@@ -121,7 +131,7 @@ export const OperationHistoryView: React.FC = () => {
               setPage(0);
             }}
             placeholder="Search by filename or ID..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-slate-950 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-violet"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-[#07080C] border border-white/[0.08] rounded-xl text-white placeholder-[#737B8C] focus:outline-none focus:border-[#A78BFA] font-mono"
           />
         </div>
 
@@ -132,7 +142,7 @@ export const OperationHistoryView: React.FC = () => {
               setTypeFilter(e.target.value);
               setPage(0);
             }}
-            className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-700/80 rounded-xl text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-violet"
+            className="w-full px-3 py-2 text-xs bg-[#07080C] border border-white/[0.08] rounded-xl text-[#F4F5F7] focus:outline-none focus:border-[#A78BFA] font-mono"
           >
             <option value="ALL">All Operation Types</option>
             <option value="ENCODE_TEXT">Encode Text</option>
@@ -149,7 +159,7 @@ export const OperationHistoryView: React.FC = () => {
               setStatusFilter(e.target.value);
               setPage(0);
             }}
-            className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-700/80 rounded-xl text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-violet"
+            className="w-full px-3 py-2 text-xs bg-[#07080C] border border-white/[0.08] rounded-xl text-[#F4F5F7] focus:outline-none focus:border-[#A78BFA] font-mono"
           >
             <option value="ALL">All Statuses</option>
             <option value="SUCCESS">Success Only</option>
@@ -159,18 +169,43 @@ export const OperationHistoryView: React.FC = () => {
       </div>
 
       {/* Table Records Card */}
-      <Card className="p-0 overflow-hidden">
+      <div className="rounded-2xl bg-[#11141D] border border-white/[0.08] overflow-hidden">
         {isLoading ? (
-          <div className="p-10 text-center text-xs text-slate-400">Loading history records...</div>
+          <div className="p-12 text-center text-xs font-mono text-[#737B8C]">
+            Loading history records...
+          </div>
         ) : records.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <Clock className="w-8 h-8 text-slate-600 mx-auto" />
-            <p className="text-xs text-slate-400">No operation records match your filter criteria.</p>
+          /* Designed Empty State with Abstract Geometric Line Ledger */
+          <div className="p-16 text-center flex flex-col items-center justify-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center p-3 relative">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="8" y1="12" x2="32" y2="12" stroke="#737B8C" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 3" />
+                <line x1="8" y1="20" x2="26" y2="20" stroke="#A1A7B5" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="8" y1="28" x2="20" y2="28" stroke="#737B8C" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
+                <circle cx="30" cy="24" r="3" stroke="#A78BFA" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold text-white">Nothing concealed. Yet.</h3>
+              <p className="text-xs text-[#A1A7B5] max-w-sm">
+                Your recent operations will appear here when you begin working with VEIL.
+              </p>
+            </div>
+            {onNavigate && (
+              <button
+                type="button"
+                onClick={() => onNavigate('studio')}
+                className="px-5 py-2.5 rounded-xl bg-[#F4F5F7] text-[#07080C] hover:bg-white text-xs font-semibold tracking-tight transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+              >
+                <span>Open the Studio</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 text-slate-400 font-mono text-[11px] border-b border-slate-800">
+              <thead className="bg-[#0B0D13] text-[#737B8C] font-mono text-[11px] border-b border-white/[0.08]">
                 <tr>
                   <th className="py-3 px-4">Operation</th>
                   <th className="py-3 px-4">Status</th>
@@ -180,24 +215,24 @@ export const OperationHistoryView: React.FC = () => {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-white/[0.04] font-mono">
                 {records.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-4">
+                  <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
                         {r.operationType.includes('ENCODE') ? (
-                          <Lock className="w-3.5 h-3.5 text-brand-violet" />
+                          <Lock className="w-3.5 h-3.5 text-[#A78BFA]" />
                         ) : r.operationType.includes('EXTRACT') ? (
                           <Unlock className="w-3.5 h-3.5 text-emerald-400" />
                         ) : (
-                          <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />
+                          <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
                         )}
-                        <span className="font-semibold text-slate-200">
+                        <span className="font-semibold text-white">
                           {r.operationType.replace('_', ' ')}
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                           r.status === 'SUCCESS'
@@ -213,13 +248,13 @@ export const OperationHistoryView: React.FC = () => {
                         {r.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-300 truncate max-w-[160px]">
+                    <td className="py-3.5 px-4 text-[#A1A7B5] truncate max-w-[160px]">
                       {r.inputFilename || '—'}
                     </td>
-                    <td className="py-3 px-4 text-slate-300 truncate max-w-[160px]">
+                    <td className="py-3.5 px-4 text-[#A1A7B5] truncate max-w-[160px]">
                       {r.outputFilename || '—'}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-[11px]">
+                    <td className="py-3.5 px-4 text-[#737B8C] text-[11px]">
                       {new Date(r.createdAt).toLocaleString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -227,10 +262,11 @@ export const OperationHistoryView: React.FC = () => {
                         minute: '2-digit',
                       })}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right">
                       <button
+                        type="button"
                         onClick={() => setSelectedRecord(r)}
-                        className="px-2.5 py-1 text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
+                        className="px-2.5 py-1 text-[11px] rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white transition-colors cursor-pointer"
                       >
                         Details
                       </button>
@@ -244,31 +280,31 @@ export const OperationHistoryView: React.FC = () => {
 
         {/* Pagination Bar */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-slate-800 text-xs text-slate-400 font-mono">
+          <div className="flex items-center justify-between p-4 border-t border-white/[0.08] text-xs text-[#A1A7B5] font-mono">
             <span>
               Page {page + 1} of {totalPages} ({totalCount} total operations)
             </span>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 disabled={page === 0}
                 onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                className="px-3 py-1.5 rounded-lg bg-[#07080C] border border-white/[0.08] text-white disabled:opacity-40 cursor-pointer"
               >
                 Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+              </button>
+              <button
+                type="button"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+                className="px-3 py-1.5 rounded-lg bg-[#07080C] border border-white/[0.08] text-white disabled:opacity-40 cursor-pointer"
               >
                 Next
-              </Button>
+              </button>
             </div>
           </div>
         )}
-      </Card>
+      </div>
 
       {/* Operation Details Modal */}
       <Modal
@@ -280,61 +316,67 @@ export const OperationHistoryView: React.FC = () => {
         {selectedRecord && (
           <div className="space-y-4 text-xs font-mono">
             <div className="grid grid-cols-2 gap-2 text-slate-300">
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase block">Operation ID</span>
+              <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                <span className="text-[10px] text-[#737B8C] uppercase block">Operation ID</span>
                 <span className="break-all text-[11px]">{selectedRecord.id}</span>
               </div>
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase block">Operation Type</span>
-                <span className="font-semibold text-slate-100">{selectedRecord.operationType}</span>
+              <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                <span className="text-[10px] text-[#737B8C] uppercase block">Operation Type</span>
+                <span className="font-semibold text-white">{selectedRecord.operationType}</span>
               </div>
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase block">Status</span>
+              <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                <span className="text-[10px] text-[#737B8C] uppercase block">Status</span>
                 <span
                   className={selectedRecord.status === 'SUCCESS' ? 'text-emerald-400' : 'text-red-400'}
                 >
                   {selectedRecord.status}
                 </span>
               </div>
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase block">Payload Category</span>
+              <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                <span className="text-[10px] text-[#737B8C] uppercase block">Payload Category</span>
                 <span>{selectedRecord.payloadType || 'NONE'}</span>
               </div>
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase block">Input Carrier</span>
+              <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                <span className="text-[10px] text-[#737B8C] uppercase block">Input Carrier</span>
                 <span className="truncate block">{selectedRecord.inputFilename || 'None'}</span>
               </div>
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 uppercase block">Output File</span>
+              <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                <span className="text-[10px] text-[#737B8C] uppercase block">Output File</span>
                 <span className="truncate block">{selectedRecord.outputFilename || 'None'}</span>
               </div>
               {selectedRecord.inputImageWidth && (
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-500 uppercase block">Dimensions</span>
+                <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                  <span className="text-[10px] text-[#737B8C] uppercase block">Dimensions</span>
                   <span>
                     {selectedRecord.inputImageWidth} × {selectedRecord.inputImageHeight} px
                   </span>
                 </div>
               )}
               {selectedRecord.payloadSizeBytes !== null && selectedRecord.payloadSizeBytes !== undefined && (
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-500 uppercase block">Payload Size</span>
-                  <span>{selectedRecord.payloadSizeBytes.toLocaleString()} bytes</span>
-                </div>
-              )}
-              {selectedRecord.failureCategory && (
-                <div className="col-span-2 p-3 rounded-lg bg-red-950/30 border border-red-500/30 text-red-300">
-                  <span className="text-[10px] uppercase block text-red-400">Failure Reason</span>
-                  <span>{selectedRecord.failureCategory}</span>
+                <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08]">
+                  <span className="text-[10px] text-[#737B8C] uppercase block">Payload Size</span>
+                  <span>{selectedRecord.payloadSizeBytes} bytes</span>
                 </div>
               )}
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>
-                Zero plaintext secret messages or encryption keys are ever logged or saved to database storage.
-              </span>
+            {selectedRecord.estimatedCapacityBytes !== null && selectedRecord.estimatedCapacityBytes !== undefined && (
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                <span className="text-[10px] uppercase block">Carrier Raw Capacity</span>
+                <span className="text-base font-bold">{(selectedRecord.estimatedCapacityBytes / 1024).toFixed(1)} KiB</span>
+                {selectedRecord.encryptedPayloadSizeBytes !== null && selectedRecord.encryptedPayloadSizeBytes !== undefined && (
+                  <span className="text-[11px] block text-emerald-400/80 mt-0.5">
+                    Ciphertext Size: {selectedRecord.encryptedPayloadSizeBytes} bytes
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="p-3 rounded-lg bg-[#07080C] border border-white/[0.08] text-[11px] text-[#A1A7B5]">
+              <span className="text-[10px] text-[#737B8C] uppercase block mb-1">Privacy Guarantee</span>
+              <p>
+                Passwords, master encryption keys, and plaintext secret messages are deliberately discarded from memory immediately after execution and are never recorded to SQLite.
+              </p>
             </div>
           </div>
         )}
@@ -344,26 +386,28 @@ export const OperationHistoryView: React.FC = () => {
       <Modal
         isOpen={isClearModalOpen}
         onClose={() => setIsClearModalOpen(false)}
-        title="Confirm Clear Operation History"
-        maxWidth="sm"
+        title="Clear Local History"
       >
-        <div className="space-y-4">
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Are you sure you want to delete all operation metadata from the local SQLite database? This action is permanent and cannot be undone.
+        <div className="space-y-4 text-xs font-mono">
+          <p className="text-slate-300">
+            Are you sure you want to delete all historical operation records from the local SQLite database? This cannot be undone.
           </p>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setIsClearModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              isLoading={isClearing}
-              onClick={handleClearHistory}
-              leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsClearModalOpen(false)}
+              className="px-3.5 py-2 rounded-xl bg-white/[0.06] text-white hover:bg-white/[0.12] transition-colors cursor-pointer"
             >
-              Clear All Records
-            </Button>
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isClearing}
+              onClick={handleClearHistory}
+              className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-colors cursor-pointer disabled:opacity-60"
+            >
+              {isClearing ? 'Clearing...' : 'Yes, Delete All'}
+            </button>
           </div>
         </div>
       </Modal>

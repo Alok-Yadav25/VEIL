@@ -62,8 +62,9 @@ public class VeilProperties {
         private int maxImageHeight = 8192;
         private long maxPayloadSizeBytes = 10485760;
         private String magicBytes = "VEIL";
-        private int envelopeVersion = 1;
+        private int envelopeVersion = 3;
         private int plaintextVersion = 1;
+        private byte defaultFecMode = 1; // 1 = BALANCED, 0 = NONE, 2 = HIGH
 
         public int getMaxImageWidth() { return maxImageWidth; }
         public void setMaxImageWidth(int maxImageWidth) { this.maxImageWidth = maxImageWidth; }
@@ -82,6 +83,9 @@ public class VeilProperties {
 
         public int getPlaintextVersion() { return plaintextVersion; }
         public void setPlaintextVersion(int plaintextVersion) { this.plaintextVersion = plaintextVersion; }
+
+        public byte getDefaultFecMode() { return defaultFecMode; }
+        public void setDefaultFecMode(byte defaultFecMode) { this.defaultFecMode = defaultFecMode; }
     }
 
     public static class Cors {

@@ -18,5 +18,6 @@ public record EncodeResponse(
         boolean recoverabilityVerified,
         String encryptionAlgorithm,
         String keyDerivationAlgorithm,
-        int pbkdf2Iterations
+        int pbkdf2Iterations,
+        String fecMode
 ) {}

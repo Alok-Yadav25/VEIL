@@ -1,11 +1,12 @@
 package com.veil.service;
 
 import com.veil.config.VeilProperties;
-import com.veil.crypto.AesGcmCipher;
 import com.veil.crypto.CryptoConstants;
 import com.veil.exception.CryptographicException;
 import com.veil.exception.PayloadCorruptedException;
 import com.veil.exception.SteganographyException;
+import com.veil.fec.FecMode;
+import com.veil.fec.ReedSolomonCodec;
 import com.veil.image.CapacityCalculator;
 import com.veil.image.ImageDiffCalculator;
 import com.veil.image.ImageProcessingService;
@@ -29,7 +30,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
 import javax.imageio.ImageIO;
 
 @Service
@@ -40,6 +40,7 @@ public class SteganographyService {
     private final ImageProcessingService imageProcessingService;
     private final EncryptionService encryptionService;
     private final PayloadCodec payloadCodec;
+    private final ReedSolomonCodec reedSolomonCodec;
     private final LsbEncoder lsbEncoder;
     private final LsbDecoder lsbDecoder;
     private final CapacityCalculator capacityCalculator;
@@ -51,6 +52,7 @@ public class SteganographyService {
             ImageProcessingService imageProcessingService,
             EncryptionService encryptionService,
             PayloadCodec payloadCodec,
+            ReedSolomonCodec reedSolomonCodec,
             LsbEncoder lsbEncoder,
             LsbDecoder lsbDecoder,
             CapacityCalculator capacityCalculator,
@@ -61,6 +63,7 @@ public class SteganographyService {
         this.imageProcessingService = imageProcessingService;
         this.encryptionService = encryptionService;
         this.payloadCodec = payloadCodec;
+        this.reedSolomonCodec = reedSolomonCodec;
         this.lsbEncoder = lsbEncoder;
         this.lsbDecoder = lsbDecoder;
         this.capacityCalculator = capacityCalculator;
@@ -85,7 +88,8 @@ public class SteganographyService {
             boolean recoverabilityVerified,
             String encryptionAlgorithm,
             String keyDerivationAlgorithm,
-            int pbkdf2Iterations
+            int pbkdf2Iterations,
+            String fecMode
     ) {}
 
     public record ExtractExecutionResult(
@@ -100,7 +104,8 @@ public class SteganographyService {
             boolean authenticationPassed,
             int envelopeVersion,
             String encryptionAlgorithm,
-            String keyDerivationAlgorithm
+            String keyDerivationAlgorithm,
+            String fecMode
     ) {}
 
     public EncodeExecutionResult encodeText(
@@ -108,6 +113,30 @@ public class SteganographyService {
             String carrierFilename,
             String messageText,
             char[] password
+    ) {
+        return encodeText(carrierBytes, carrierFilename, messageText, password,
+                CryptoConstants.STRATEGY_KEYED_SCATTER_CODE, CryptoConstants.KDF_ID_ARGON2ID, properties.getSteganography().getDefaultFecMode());
+    }
+
+    public EncodeExecutionResult encodeText(
+            byte[] carrierBytes,
+            String carrierFilename,
+            String messageText,
+            char[] password,
+            byte strategyCode,
+            byte kdfId
+    ) {
+        return encodeText(carrierBytes, carrierFilename, messageText, password, strategyCode, kdfId, properties.getSteganography().getDefaultFecMode());
+    }
+
+    public EncodeExecutionResult encodeText(
+            byte[] carrierBytes,
+            String carrierFilename,
+            String messageText,
+            char[] password,
+            byte strategyCode,
+            byte kdfId,
+            byte fecMode
     ) {
         if (messageText == null || messageText.isEmpty()) {
             throw new SteganographyException("Message text cannot be empty", "EMPTY_MESSAGE");
@@ -120,7 +149,10 @@ public class SteganographyService {
                 "",
                 payloadBytes,
                 password,
-                OperationType.ENCODE_TEXT
+                OperationType.ENCODE_TEXT,
+                strategyCode,
+                kdfId,
+                fecMode
         );
     }
 
@@ -130,6 +162,32 @@ public class SteganographyService {
             byte[] fileBytes,
             String originalFilename,
             char[] password
+    ) {
+        return encodeFile(carrierBytes, carrierFilename, fileBytes, originalFilename, password,
+                CryptoConstants.STRATEGY_KEYED_SCATTER_CODE, CryptoConstants.KDF_ID_ARGON2ID, properties.getSteganography().getDefaultFecMode());
+    }
+
+    public EncodeExecutionResult encodeFile(
+            byte[] carrierBytes,
+            String carrierFilename,
+            byte[] fileBytes,
+            String originalFilename,
+            char[] password,
+            byte strategyCode,
+            byte kdfId
+    ) {
+        return encodeFile(carrierBytes, carrierFilename, fileBytes, originalFilename, password, strategyCode, kdfId, properties.getSteganography().getDefaultFecMode());
+    }
+
+    public EncodeExecutionResult encodeFile(
+            byte[] carrierBytes,
+            String carrierFilename,
+            byte[] fileBytes,
+            String originalFilename,
+            char[] password,
+            byte strategyCode,
+            byte kdfId,
+            byte fecMode
     ) {
         if (fileBytes == null || fileBytes.length == 0) {
             throw new SteganographyException("File payload cannot be empty", "EMPTY_FILE");
@@ -142,7 +200,10 @@ public class SteganographyService {
                 safeName,
                 fileBytes,
                 password,
-                OperationType.ENCODE_FILE
+                OperationType.ENCODE_FILE,
+                strategyCode,
+                kdfId,
+                fecMode
         );
     }
 
@@ -153,7 +214,10 @@ public class SteganographyService {
             String filename,
             byte[] contentBytes,
             char[] password,
-            OperationType operationType
+            OperationType operationType,
+            byte strategyCode,
+            byte kdfId,
+            byte fecMode
     ) {
         long startTime = System.currentTimeMillis();
         String safeCarrierName = FilenameSanitizer.sanitize(carrierFilename);
@@ -174,39 +238,76 @@ public class SteganographyService {
             );
             byte[] serializedPlaintext = payloadCodec.serializePlaintext(plaintextPayload);
 
-            // 3. Encrypt with AES-256-GCM and PBKDF2
-            AesGcmCipher.EncryptionResult encResult = encryptionService.encrypt(serializedPlaintext, password);
+            // 3. Generate random salt and nonce
+            byte[] salt = encryptionService.generateRandomBytes(CryptoConstants.SALT_LENGTH_BYTES);
+            byte[] nonce = encryptionService.generateRandomBytes(CryptoConstants.NONCE_LENGTH_BYTES);
 
-            // 4. Wrap into BinaryEnvelope
-            BinaryEnvelope envelope = new BinaryEnvelope(
-                    properties.getSteganography().getMagicBytes(),
-                    properties.getSteganography().getEnvelopeVersion(),
+            // 4. Derive masterKey and dedicated embeddingKey using HKDF key separation
+            EncryptionService.KeyDerivationOutput keys = encryptionService.deriveKeys(password, salt, kdfId);
+
+            // 5. Calculate ciphertext lengths and build bootstrap header (Version 3 with strategy and FEC code)
+            int envelopeVersion = properties.getSteganography().getEnvelopeVersion();
+            com.veil.fec.FecMode fecModeEnum = com.veil.fec.FecMode.fromCode(fecMode);
+            int rawCiphertextLen = serializedPlaintext.length + CryptoConstants.GCM_TAG_LENGTH_BYTES;
+            int totalFecCiphertextLen = reedSolomonCodec.calculateEncodedLength(rawCiphertextLen, fecModeEnum);
+
+            byte[] headerBytes = payloadCodec.buildHeaderBytes(
+                    envelopeVersion,
+                    strategyCode,
+                    fecMode,
                     payloadType,
-                    CryptoConstants.KDF_ID_PBKDF2_SHA256,
+                    kdfId,
                     CryptoConstants.CIPHER_ID_AES_256_GCM,
-                    encResult.salt(),
-                    encResult.nonce(),
-                    encResult.ciphertextWithTag()
+                    salt,
+                    nonce,
+                    totalFecCiphertextLen
             );
 
-            // 5. Serialize envelope
+            // 6. Encrypt with AES-256-GCM using headerBytes as Associated Authenticated Data (AAD)
+            byte[] ciphertextWithTag = encryptionService.encryptWithAad(
+                    serializedPlaintext,
+                    keys.masterKey(),
+                    nonce,
+                    headerBytes
+            );
+
+            // 7. Apply Forward Error Correction (Reed-Solomon)
+            byte[] fecEncodedPayload = reedSolomonCodec.encode(ciphertextWithTag, fecModeEnum);
+
+            // 8. Wrap into BinaryEnvelope
+            BinaryEnvelope envelope = new BinaryEnvelope(
+                    PayloadCodec.MAGIC,
+                    envelopeVersion,
+                    strategyCode,
+                    fecMode,
+                    payloadType,
+                    kdfId,
+                    CryptoConstants.CIPHER_ID_AES_256_GCM,
+                    salt,
+                    nonce,
+                    fecEncodedPayload,
+                    headerBytes
+            );
+
+            // 9. Serialize full envelope (header + ciphertext)
             byte[] serializedEnvelope = payloadCodec.serializeEnvelope(envelope);
 
-            // 6. Capacity evaluation
+            // 10. Capacity evaluation
             CapacityCalculator.CapacityEvaluation eval = capacityCalculator.evaluateCapacity(
                     width,
                     height,
                     contentBytes.length,
-                    filename
+                    filename,
+                    fecMode
             );
 
-            // 7. Embed envelope into LSBs
-            BufferedImage encodedImage = lsbEncoder.embed(carrierImage, serializedEnvelope);
+            // 11. Embed envelope into LSBs using selected strategy and derived embedding key
+            BufferedImage encodedImage = lsbEncoder.embed(carrierImage, serializedEnvelope, strategyCode, keys.embeddingKey());
 
-            // 8. Write to PNG bytes
+            // 11. Write to PNG bytes
             byte[] outputPngBytes = imageProcessingService.writePng(encodedImage);
 
-            // 9. RECOVERABILITY CHECK: Re-read generated PNG from bytes and verify envelope integrity
+            // 12. RECOVERABILITY CHECK: Re-read generated PNG from bytes and verify envelope integrity
             BufferedImage reopenedImage;
             try (ByteArrayInputStream bais = new ByteArrayInputStream(outputPngBytes)) {
                 reopenedImage = ImageIO.read(bais);
@@ -216,18 +317,25 @@ public class SteganographyService {
             if (reopenedImage == null) {
                 throw new SteganographyException("Failed to reopen generated PNG image for recoverability verification", "VERIFICATION_FAILED");
             }
-            BinaryEnvelope recoveredEnvelope = lsbDecoder.extract(reopenedImage);
+
+            BinaryEnvelope recoveredEnvelope = lsbDecoder.extract(reopenedImage, keys.embeddingKey());
             if (!Arrays.equals(recoveredEnvelope.getCiphertextWithTag(), envelope.getCiphertextWithTag())) {
                 throw new SteganographyException("Recoverability verification failed: extracted ciphertext does not match original ciphertext", "RECOVERABILITY_MISMATCH");
             }
+            byte[] verifiedCiphertext = (recoveredEnvelope.getFecMode() != CryptoConstants.FEC_MODE_NONE)
+                    ? reedSolomonCodec.decode(recoveredEnvelope.getCiphertextWithTag(), com.veil.fec.FecMode.fromCode(recoveredEnvelope.getFecMode()))
+                    : recoveredEnvelope.getCiphertextWithTag();
+            if (!Arrays.equals(verifiedCiphertext, ciphertextWithTag)) {
+                throw new SteganographyException("Recoverability verification failed: FEC decoded payload does not match original ciphertext", "RECOVERABILITY_MISMATCH");
+            }
 
-            // 10. Calculate image difference metrics
+            // 13. Calculate image difference metrics
             ImageDiffCalculator.DiffMetrics diffMetrics = imageDiffCalculator.compare(carrierImage, encodedImage);
 
             // Output filename derivation
             String outputName = "veil_" + System.currentTimeMillis() + ".png";
 
-            // 11. Record operation in SQLite history
+            // 14. Record operation in SQLite history
             OperationRecord history = historyService.recordSuccess(
                     operationType,
                     payloadTypeEnum,
@@ -236,13 +344,29 @@ public class SteganographyService {
                     width,
                     height,
                     contentBytes.length,
-                    (long) encResult.ciphertextWithTag().length,
+                    (long) ciphertextWithTag.length,
                     eval.rawCapacityBytes(),
-                    properties.getSteganography().getEnvelopeVersion()
+                    envelopeVersion
             );
 
-            log.info("Successfully encoded and verified payload in {}ms. Output size: {} bytes",
+            String stratName = switch (strategyCode) {
+                case CryptoConstants.STRATEGY_KEYED_SCATTER_CODE -> "KEYED_SCATTER";
+                case CryptoConstants.STRATEGY_DCT_CODE -> "DCT_FREQUENCY";
+                default -> "SEQUENTIAL";
+            };
+
+            log.info("Successfully encoded and verified payload with strategy {} in {}ms. Output size: {} bytes",
+                    stratName,
                     (System.currentTimeMillis() - startTime), outputPngBytes.length);
+
+            String kdfName = (kdfId == CryptoConstants.KDF_ID_ARGON2ID) ? "Argon2id (RFC 9106, 19 MiB, 2 iterations, 1 lane)" : "PBKDF2-HMAC-SHA-256";
+            int iterations = (kdfId == CryptoConstants.KDF_ID_ARGON2ID) ? 2 : properties.getCrypto().getPbkdf2Iterations();
+
+            String fecModeDescription = switch (fecMode) {
+                case CryptoConstants.FEC_MODE_BALANCED -> "Balanced Reed-Solomon (RS 255/239, corrects 8 bytes/block)";
+                case CryptoConstants.FEC_MODE_HIGH -> "High-Redundancy Reed-Solomon (RS 255/223, corrects 16 bytes/block)";
+                default -> "None (0% overhead)";
+            };
 
             return new EncodeExecutionResult(
                     history.getId(),
@@ -253,14 +377,15 @@ public class SteganographyService {
                     carrierBytes.length,
                     outputPngBytes.length,
                     contentBytes.length,
-                    encResult.ciphertextWithTag().length,
+                    ciphertextWithTag.length,
                     eval.rawCapacityBytes(),
                     eval.utilizationPercentage(),
                     diffMetrics,
                     true,
-                    "AES-256-GCM (256-bit key, 128-bit authentication tag)",
-                    "PBKDF2-HMAC-SHA-256",
-                    properties.getCrypto().getPbkdf2Iterations()
+                    "AES-256-GCM (256-bit key, 128-bit tag, AAD framing)",
+                    kdfName,
+                    iterations,
+                    fecModeDescription
             );
 
         } catch (RuntimeException e) {
@@ -282,18 +407,48 @@ public class SteganographyService {
             // 1. Read carrier image
             BufferedImage image = imageProcessingService.readSupportedImage(carrierBytes, safeName);
 
-            // 2. Extract envelope from LSBs
-            BinaryEnvelope envelope = lsbDecoder.extract(image);
+            // 2. Extract fixed bootstrap header
+            PayloadCodec.HeaderInfo header = lsbDecoder.extractHeader(image);
 
-            // 3. Authenticated AES-GCM Decryption (will throw CryptographicException if bad tag or wrong password)
-            byte[] decryptedPlaintext = encryptionService.decrypt(
-                    envelope.getCiphertextWithTag(),
-                    password,
-                    envelope.getSalt(),
-                    envelope.getNonce()
-            );
+            // 3. Derive keys based on KDF ID specified in the header
+            EncryptionService.KeyDerivationOutput keys = encryptionService.deriveKeys(password, header.salt(), header.kdfId());
 
-            // 4. Deserialize plaintext structure
+            // 4. Extract envelope ciphertext using strategy specified in header and derived embedding key
+            BinaryEnvelope envelope = lsbDecoder.extract(image, keys.embeddingKey());
+
+            // 5. Apply FEC Error Correction if enabled in header
+            byte[] ciphertextToDecrypt;
+            if (header.version() >= 3 && header.fecMode() != CryptoConstants.FEC_MODE_NONE) {
+                try {
+                    com.veil.fec.FecMode fecModeEnum = com.veil.fec.FecMode.fromCode(header.fecMode());
+                    ciphertextToDecrypt = reedSolomonCodec.decode(envelope.getCiphertextWithTag(), fecModeEnum);
+                } catch (PayloadCorruptedException e) {
+                    throw new CryptographicException("Decryption failed. The provided password may be incorrect, or the encrypted payload has been tampered with.", "AUTHENTICATION_FAILED", e);
+                }
+            } else {
+                ciphertextToDecrypt = envelope.getCiphertextWithTag();
+            }
+
+            // 6. Decrypt ciphertext: Version >= 2 verifies AAD authenticated framing
+            byte[] decryptedPlaintext;
+            if (header.version() >= 2) {
+                decryptedPlaintext = encryptionService.decryptWithAad(
+                        ciphertextToDecrypt,
+                        keys.masterKey(),
+                        envelope.getNonce(),
+                        header.rawHeaderBytes()
+                );
+            } else {
+                // Version 1 legacy backward compatibility (PBKDF2 without AAD)
+                decryptedPlaintext = encryptionService.decrypt(
+                        ciphertextToDecrypt,
+                        password,
+                        envelope.getSalt(),
+                        envelope.getNonce()
+                );
+            }
+
+            // 7. Deserialize plaintext structure
             PlaintextPayload plaintextPayload = payloadCodec.deserializePlaintext(decryptedPlaintext);
 
             String recoveredText = null;
@@ -326,6 +481,13 @@ public class SteganographyService {
                     envelope.getVersion()
             );
 
+            String kdfName = (header.kdfId() == CryptoConstants.KDF_ID_ARGON2ID) ? "Argon2id (RFC 9106)" : "PBKDF2-HMAC-SHA-256";
+            String fecModeDescription = switch (header.fecMode()) {
+                case CryptoConstants.FEC_MODE_BALANCED -> "Balanced Reed-Solomon (RS 255/239)";
+                case CryptoConstants.FEC_MODE_HIGH -> "High-Redundancy Reed-Solomon (RS 255/223)";
+                default -> "None";
+            };
+
             return new ExtractExecutionResult(
                     history.getId(),
                     plaintextPayload.getPayloadType(),
@@ -338,7 +500,8 @@ public class SteganographyService {
                     true,
                     envelope.getVersion(),
                     "AES-256-GCM (Authenticated)",
-                    "PBKDF2-HMAC-SHA-256"
+                    kdfName,
+                    fecModeDescription
             );
 
         } catch (RuntimeException e) {

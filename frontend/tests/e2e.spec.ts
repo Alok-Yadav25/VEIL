@@ -12,8 +12,8 @@ test.describe('VEIL End-to-End Suite', () => {
     await page.goto('/');
 
     // 1. Verify landing hero
-    await expect(page.locator('h1')).toContainText('Your secrets deserve');
-    await expect(page.getByText('Offline-First Steganography Workspace')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Invisible Cryptography');
+    await expect(page.getByText('PRIVATE IMAGE STEGANOGRAPHY STUDIO')).toBeVisible();
 
     // 2. Open Command Palette with keyboard
     await page.keyboard.press('Meta+k');
@@ -22,17 +22,12 @@ test.describe('VEIL End-to-End Suite', () => {
     await expect(page.getByPlaceholder('Type a command or navigate to workspace...')).not.toBeVisible();
 
     // 3. Navigate to Security Center
-    await page.getByRole('button', { name: /Security Center/i }).click();
-    await expect(page.getByRole('heading', { name: 'Security Center' })).toBeVisible();
+    await page.locator('aside').getByTitle('Security & Telemetry').click();
+    await expect(page.getByRole('heading', { name: /Security Architecture/i })).toBeVisible();
     await expect(page.getByText('AES-256-GCM', { exact: true }).first()).toBeVisible();
 
-    // 4. Navigate to Steganography Explorer
-    await page.getByRole('button', { name: /Steganography Explorer/i }).click();
-    await expect(page.getByRole('heading', { name: 'Steganography Explorer' })).toBeVisible();
-    await expect(page.getByText('Interactive Pixel Grid')).toBeVisible();
-
-    // 5. Navigate to Settings
-    await page.getByRole('button', { name: 'Settings' }).click();
+    // 4. Navigate to Settings
+    await page.locator('aside').getByTitle('Studio Settings').click();
     await expect(page.getByRole('heading', { name: /Settings/i })).toBeVisible();
   });
 
@@ -42,42 +37,35 @@ test.describe('VEIL End-to-End Suite', () => {
 
     await page.goto('/');
 
-    // 1. Go to Hide Data
-    await page.locator('aside').getByRole('button', { name: 'Hide Data' }).click();
-    await expect(page.getByRole('heading', { name: 'Hide Data', level: 1 })).toBeVisible();
+    // 1. Go to Conceal Payload
+    await page.locator('aside').getByTitle('Conceal Payload').click();
 
-    // 2. Step 1: Upload carrier image
+    // 2. Upload carrier image
     const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles(fixturePath);
     await expect(page.getByText('test_carrier.png')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Next: Choose Payload' }).click();
-
-    // 3. Step 2: Enter secret text
-    const textarea = page.getByPlaceholder(/Type or paste confidential text here/i);
+    // 3. Enter secret text
+    const textarea = page.getByPlaceholder(/Write or paste the confidential message/i);
     await textarea.fill(testSecret);
-    await page.getByRole('button', { name: 'Next: Set Password' }).click();
 
-    // 4. Step 3: Enter password
-    const pwdInput = page.getByPlaceholder(/Enter strong password/i);
-    await pwdInput.fill(testPassword);
-    await page.getByRole('button', { name: 'Next: Capacity Check' }).click();
+    // 4. Enter password & confirmation
+    const pwdInputs = page.locator('input[type="password"]');
+    await pwdInputs.nth(0).fill(testPassword);
+    await pwdInputs.nth(1).fill(testPassword);
 
-    // 5. Step 4: Verify Preflight report
-    await expect(page.getByText('Ready to Encode')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: 'Next: Review & Confirm' }).click();
+    // 5. Submit encoding
+    const submitBtn = page.getByRole('button', { name: /Encrypt & Embed Payload/i });
+    await expect(submitBtn).toBeEnabled();
+    await submitBtn.click();
 
-    // 6. Step 5: Review & Encrypt
-    await expect(page.getByText('AES-256-GCM (PBKDF2 100k rounds)')).toBeVisible();
-    await page.getByRole('button', { name: 'Encrypt & Hide' }).click();
+    // 6. Verify Execution Stepper & Result
+    await expect(page.getByText(/Embedding & Recoverability Verified/i)).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText('VERIFIED', { exact: true })).toBeVisible();
 
-    // 7. Step 6: Verify Success Screen
-    await expect(page.getByText('Payload Encoded & Protected')).toBeVisible({ timeout: 20000 });
-    await expect(page.getByText('Recoverability Verified', { exact: true })).toBeVisible();
-
-    // 8. Navigate to Activity History
-    await page.locator('aside').getByRole('button', { name: 'Operation History' }).click();
-    await expect(page.getByRole('heading', { name: 'Operation History' })).toBeVisible();
+    // 7. Navigate to Activity History
+    await page.locator('aside').getByTitle('Session Log').click();
+    await expect(page.getByRole('heading', { name: /Operation History/i })).toBeVisible();
     await expect(page.locator('table').getByText('ENCODE TEXT').first()).toBeVisible();
     await expect(page.locator('table').getByText('SUCCESS').first()).toBeVisible();
 

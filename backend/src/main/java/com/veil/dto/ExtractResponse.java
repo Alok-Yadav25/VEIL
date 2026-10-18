@@ -12,5 +12,6 @@ public record ExtractResponse(
         boolean authenticationPassed,
         int envelopeVersion,
         String encryptionAlgorithm,
-        String keyDerivationAlgorithm
+        String keyDerivationAlgorithm,
+        String fecMode
 ) {}

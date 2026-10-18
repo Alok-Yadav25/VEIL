@@ -54,10 +54,12 @@ public class SteganographyServiceTest {
         OperationHistoryRepository mockRepo = Mockito.mock(OperationHistoryRepository.class);
         HistoryService historyService = new HistoryService(mockRepo);
 
+        com.veil.fec.ReedSolomonCodec reedSolomonCodec = new com.veil.fec.ReedSolomonCodec();
         service = new SteganographyService(
                 imageProcessingService,
                 encryptionService,
                 payloadCodec,
+                reedSolomonCodec,
                 lsbEncoder,
                 lsbDecoder,
                 capacityCalculator,

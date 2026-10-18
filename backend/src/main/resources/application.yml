@@ -1,6 +1,6 @@
 server:
-  port: 8080
-  address: 127.0.0.1
+  port: ${PORT:8080}
+  address: ${SERVER_ADDRESS:0.0.0.0}
 
 spring:
   application:
@@ -13,6 +13,7 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+      connection-init-sql: "PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA synchronous=NORMAL;"
   servlet:
     multipart:
       enabled: true
@@ -41,11 +42,13 @@ veil:
     max-image-height: 8192
     max-payload-size-bytes: 10485760 # 10MB
     magic-bytes: "VEIL"
-    envelope-version: 1
+    envelope-version: 3
     plaintext-version: 1
+    default-fec-mode: 1
   cors:
     allowed-origins:
       - "http://localhost:5173"
       - "http://127.0.0.1:5173"
       - "http://localhost:3000"
       - "http://127.0.0.1:3000"
+      - "*"

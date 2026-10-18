@@ -171,3 +171,113 @@ export interface HealthResponse {
   timestamp: string;
   environment: Record<string, string>;
 }
+
+export interface ChannelAnalysis {
+  chiSquare: number;
+  degreesOfFreedom: number;
+  pValue: number;
+  estimatedModificationRate: number;
+  anomalyDetected: boolean;
+}
+
+export interface SteganalysisResponse {
+  carrierFilename: string;
+  width: number;
+  height: number;
+  totalChannels: number;
+  overallChiSquare: number;
+  overallDegreesOfFreedom: number;
+  overallPValue: number;
+  estimatedEmbeddingRate: number;
+  anomalyDetected: boolean;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  channelBreakdown: Record<string, ChannelAnalysis>;
+  interpretation: string;
+  methodologicalLimitations: string;
+}
+
+export interface BinaryEncodeResult {
+  blob: Blob;
+  outputFilename: string;
+  operationId: string;
+  width: number;
+  height: number;
+  payloadBytes: number;
+  encryptedBytes: number;
+  carrierCapacityBytes: number;
+  utilizationPercent: number;
+  psnr: number;
+  mse: number;
+  encryptionAlgorithm: string;
+  kdfAlgorithm: string;
+}
+
+export interface DualEncodeResponse {
+  operationId: string;
+  encodedImageBase64: string;
+  outputFilename: string;
+  width: number;
+  height: number;
+  originalFileSizeBytes: number;
+  outputPngSizeBytes: number;
+  primaryPayloadBytes: number;
+  decoyPayloadBytes: number;
+  partitionCapacityBytes: number;
+  diffMetrics: DiffMetrics;
+  recoverabilityVerified: boolean;
+  disclosureNotice: string;
+}
+
+export interface StegoShareResult {
+  shareIndex: number;
+  filename: string;
+  base64Image: string;
+  psnrDb: number;
+  carrierCapacityBytes: number;
+}
+
+export interface SplitResult {
+  threshold: number;
+  totalShares: number;
+  originalPayloadBytes: number;
+  shares: StegoShareResult[];
+}
+
+export interface CombineResult {
+  threshold: number;
+  totalShares: number;
+  sharesProvided: number;
+  recoveredText?: string;
+  sha256Checksum: string;
+  verified: boolean;
+}
+
+export interface ProvenanceManifest {
+  version: string;
+  attribution: string;
+  timestamp: string;
+  imageSha256: string;
+  imageSizeBytes: number;
+  publicKeyBase64: string;
+  signatureBase64: string;
+  honestyNotice: string;
+}
+
+export interface ProvenanceVerificationResult {
+  verified: boolean;
+  status: string;
+  attribution: string;
+  signedTimestamp: string;
+  expectedSha256: string;
+  actualSha256: string;
+  publicKeyBase64: string;
+  message: string;
+  honestyNotice: string;
+}
+
+export interface ProvenanceKeyPair {
+  publicKeyBase64: string;
+  privateKeyBase64: string;
+  algorithm: string;
+}
+
