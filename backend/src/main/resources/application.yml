@@ -1,12 +1,12 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT:10000}
   address: ${SERVER_ADDRESS:0.0.0.0}
 
 spring:
   application:
     name: veil-backend
   datasource:
-    url: jdbc:sqlite:veil.db
+    url: jdbc:sqlite:${SQLITE_DB_PATH:veil.db}
     driver-class-name: org.sqlite.JDBC
     hikari:
       maximum-pool-size: 5

@@ -18,6 +18,19 @@ public class DatabaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
 
+    static {
+        try {
+            String dbPath = System.getenv("SQLITE_DB_PATH");
+            if (dbPath != null && !dbPath.isBlank()) {
+                File dbFile = new File(dbPath);
+                if (dbFile.getParentFile() != null && !dbFile.getParentFile().exists()) {
+                    dbFile.getParentFile().mkdirs();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     private final DataSource dataSource;
 
     public DatabaseConfig(DataSource dataSource) {

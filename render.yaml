@@ -5,11 +5,8 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /api/v1/health
     envVars:
-      - key: PORT
-        value: 8080
       - key: SERVER_ADDRESS
         value: 0.0.0.0
-      - key: SPRING_PROFILES_ACTIVE
-        value: production
+      - key: SQLITE_DB_PATH
+        value: /app/data/veil.db
