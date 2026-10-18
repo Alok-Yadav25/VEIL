@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, EyeOff, Activity, Sparkles } from 'lucide-react';
+import { ShieldCheck, EyeOff, Activity, Sparkles, Github } from 'lucide-react';
 import clsx from 'clsx';
 
 export interface BottomStatusBarProps {
@@ -25,28 +25,41 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   };
 
   return (
-    <footer className="w-full h-9 dark:bg-[#07080C]/95 bg-white/95 backdrop-blur-md dark:border-t dark:border-[#1E2330] border-t border-slate-200 px-4 flex items-center justify-between text-xs font-mono dark:text-slate-400 text-slate-600 select-none z-30 shrink-0 transition-colors">
-      {/* Left: Carrier Requirement & Zero-Knowledge Spec */}
+    <footer className="fixed bottom-0 inset-x-0 h-10 dark:bg-[#07080C]/92 bg-white/92 backdrop-blur-md dark:border-t dark:border-white/[0.08] border-t border-slate-200/80 px-4 flex items-center justify-between text-xs font-mono dark:text-slate-400 text-slate-600 select-none z-30 transition-colors">
+      {/* Left: Carrier Requirement & Live Telemetry Indicator */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 dark:text-slate-500 text-slate-400 hidden sm:flex">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
           <span>Lossless Carrier Required (PNG · BMP)</span>
         </div>
-        <span className="dark:text-[#1E2330] text-slate-300 hidden sm:inline">|</span>
-        <span className="dark:text-slate-400 text-slate-600">Memory-Hard KDF (Argon2id)</span>
+        <span className="dark:text-white/[0.08] text-slate-300 hidden sm:inline">|</span>
+        <div className="flex items-center gap-2">
+          <span
+            className={clsx(
+              'w-2 h-2 rounded-full',
+              isProcessing ? 'bg-cyan-500 animate-ping' : 'bg-emerald-500 dark:bg-emerald-400 animate-pulse'
+            )}
+          />
+          <span className={clsx('font-medium', isProcessing ? 'text-cyan-600 dark:text-cyan-300' : 'text-slate-700 dark:text-slate-300')}>
+            {engineStatus}
+          </span>
+        </div>
       </div>
 
-      {/* Center: Live Engine Telemetry Indicator */}
-      <div className="flex items-center gap-2">
-        <span
-          className={clsx(
-            'w-2 h-2 rounded-full',
-            isProcessing ? 'bg-cyan-500 animate-ping' : 'bg-emerald-500 dark:bg-emerald-400 animate-pulse'
-          )}
-        />
-        <span className={clsx('font-medium', isProcessing ? 'text-cyan-600 dark:text-cyan-300' : 'text-slate-700 dark:text-slate-300')}>
-          {engineStatus}
-        </span>
+      {/* Center: Author GitHub Profile Badge */}
+      <div className="flex items-center">
+        <a
+          href="https://github.com/Alok-Yadav25"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-1 rounded-full dark:bg-white/[0.06] bg-slate-100 hover:bg-slate-200/80 dark:hover:bg-white/[0.12] dark:text-[#F4F5F7] text-slate-800 transition-all border dark:border-white/[0.1] border-slate-200/80 group cursor-pointer shadow-xs"
+          title="Visit Alok Yadav on GitHub (https://github.com/Alok-Yadav25)"
+        >
+          <Github className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 group-hover:scale-110 group-hover:text-black dark:group-hover:text-white transition-transform shrink-0" />
+          <span className="text-[11.5px] font-sans font-medium text-slate-600 dark:text-slate-400">
+            Built by <span className="font-semibold text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-[#A78BFA] transition-colors underline decoration-slate-400/40 underline-offset-2">Alok Yadav</span>
+          </span>
+        </a>
       </div>
 
       {/* Right: Quick Security & Accessibility Toggles */}
@@ -65,7 +78,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
           <span className="text-[10px]">[{autoClearClipboard ? 'ON' : 'OFF'}]</span>
         </button>
 
-        <span className="dark:text-[#1E2330] text-slate-300 hidden md:inline">|</span>
+        <span className="dark:text-white/[0.08] text-slate-300 hidden md:inline">|</span>
 
         <button
           type="button"

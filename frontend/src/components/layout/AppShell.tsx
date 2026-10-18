@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Shield,
   Layers,
+  Github,
+  ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VeilVectorSymbol, VeilEmblem } from '../brand/VeilLogo';
@@ -165,6 +167,17 @@ export const AppShell: React.FC<AppShellProps> = ({
             {/* Linear-Inspired Sliding Knob Theme Switcher */}
             <ThemeSwitcher variant="compact" />
 
+            {/* Author GitHub Profile */}
+            <a
+              href="https://github.com/Alok-Yadav25"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-lg dark:bg-[#11141D] bg-slate-100 dark:border-white/[0.08] border-slate-200 border dark:text-[#A1A7B5] text-slate-600 dark:hover:text-white hover:text-slate-900 transition-colors cursor-pointer hidden sm:flex items-center justify-center hover:scale-105 active:scale-95 shadow-xs"
+              title="Alok Yadav on GitHub (https://github.com/Alok-Yadav25)"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+
             {/* Mobile Hamburger Button */}
             <button
               type="button"
@@ -245,6 +258,19 @@ export const AppShell: React.FC<AppShellProps> = ({
                   <span className="text-xs font-mono dark:text-[#737B8C] text-slate-500">Theme</span>
                   <ThemeSwitcher variant="compact" />
                 </div>
+                <a
+                  href="https://github.com/Alok-Yadav25"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-2.5 rounded-xl dark:bg-white/[0.04] bg-slate-100 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-colors border dark:border-white/[0.08] border-slate-200 group"
+                  title="Visit Alok Yadav on GitHub (https://github.com/Alok-Yadav25)"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Github className="w-4 h-4 text-slate-700 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-semibold text-slate-900 dark:text-white">Built by Alok Yadav</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white transition-colors" />
+                </a>
                 <div className="text-xs font-mono dark:text-[#737B8C] text-slate-500">
                   <p className="text-[11px] text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -258,7 +284,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 relative z-10 min-h-0 flex flex-col">
+      <main className="flex-1 relative z-10 min-h-0 flex flex-col pb-10">
         {children}
       </main>
 
